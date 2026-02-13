@@ -1,0 +1,23 @@
+{
+  "name": "time-voice",
+  "version": "1.0.0",
+  "description": "时光留声 - 基于Supabase的音视频遗物管理应用",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx http-server -p 3000",
+    "build": "echo 'Building static site...'",
+    "start": "npx http-server -p 3000"
+  },
+  "keywords": [
+    "supabase",
+    "vercel",
+    "audio",
+    "video",
+    "recording"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
