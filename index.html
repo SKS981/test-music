@@ -221,9 +221,8 @@
         const supabaseAnonKey = 'sb_publishable_6fgteWV1lGxwi4Tgx_PuLQ_w1XiEmPF';
 
         // 初始化Supabase客户端
-        if (typeof window.supabase === 'undefined') {
-            window.supabase = createClient(supabaseUrl, supabaseAnonKey);
-        }
+        // 直接使用全局 supabase 对象创建客户端
+        window.supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
 
         // 检查用户是否已登录
         async function checkUser() {
