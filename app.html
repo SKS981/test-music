@@ -583,16 +583,28 @@
         const supabaseAnonKey = 'sb_publishable_6fgteWV1lGxwi4Tgx_PuLQ_w1XiEmPF';
 
         // 初始化Supabase客户端
-        // 使用 try-catch 避免变量重复声明错误
-        try {
-            // 初始化Supabase客户端
-            if (!window.supabase || !window.supabase.auth) {
-                // 使用全局 supabase 对象创建客户端
-                window.supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+        // 使用立即执行函数表达式创建独立作用域
+        (function() {
+            // Supabase配置
+            const supabaseUrl = 'https://gdvdbzxxgwbjeaynjimp.supabase.co';
+            const supabaseAnonKey = 'sb_publishable_6fgteWV1lGxwi4Tgx_PuLQ_w1XiEmPF';
+
+            try {
+                // 尝试使用全局 supabase 对象
+                if (typeof window.supabase === 'undefined' || !window.supabase.auth) {
+                    // 检查全局作用域中是否有 createClient 函数
+                    if (typeof createClient === 'function') {
+                        window.supabase = createClient(supabaseUrl, supabaseAnonKey);
+                    } else if (typeof window.supabase === 'object' && typeof window.supabase.createClient === 'function') {
+                        window.supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+                    } else {
+                        console.error('无法初始化Supabase客户端：createClient函数未找到');
+                    }
+                }
+            } catch (e) {
+                console.error('Supabase初始化错误:', e);
             }
-        } catch (e) {
-            console.error('Supabase初始化错误:', e);
-        }
+        })();
 
         // 全局变量
         let currentUser = null;
