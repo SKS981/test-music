@@ -578,10 +578,6 @@
     </div>
 
     <script>
-        // Supabase配置
-        const supabaseUrl = 'https://gdvdbzxxgwbjeaynjimp.supabase.co';
-        const supabaseAnonKey = 'sb_publishable_6fgteWV1lGxwi4Tgx_PuLQ_w1XiEmPF';
-
         // 初始化Supabase客户端
         // 使用立即执行函数表达式创建独立作用域
         (function() {
@@ -590,13 +586,12 @@
             const supabaseAnonKey = 'sb_publishable_6fgteWV1lGxwi4Tgx_PuLQ_w1XiEmPF';
 
             try {
-                // 尝试使用全局 supabase 对象
+                // 检查是否已经存在 supabase 对象
                 if (typeof window.supabase === 'undefined' || !window.supabase.auth) {
-                    // 检查全局作用域中是否有 createClient 函数
+                    // 检查是否存在 createClient 函数
                     if (typeof createClient === 'function') {
+                        // 直接使用 createClient 函数创建客户端
                         window.supabase = createClient(supabaseUrl, supabaseAnonKey);
-                    } else if (typeof window.supabase === 'object' && typeof window.supabase.createClient === 'function') {
-                        window.supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
                     } else {
                         console.error('无法初始化Supabase客户端：createClient函数未找到');
                     }
