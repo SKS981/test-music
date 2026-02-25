@@ -221,13 +221,10 @@
         const supabaseAnonKey = 'sb_publishable_6fgteWV1lGxwi4Tgx_PuLQ_w1XiEmPF';
 
         // 初始化Supabase客户端
-        let supabase;
         if (typeof window.supabase === 'undefined') {
-            supabase = createClient(supabaseUrl, supabaseAnonKey);
-            window.supabase = supabase;
-        } else {
-            supabase = window.supabase;
+            window.supabase = createClient(supabaseUrl, supabaseAnonKey);
         }
+        const supabase = window.supabase;
 
         // 检查用户是否已登录
         async function checkUser() {
