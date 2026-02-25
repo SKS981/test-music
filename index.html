@@ -224,11 +224,10 @@
         if (typeof window.supabase === 'undefined') {
             window.supabase = createClient(supabaseUrl, supabaseAnonKey);
         }
-        const supabase = window.supabase;
 
         // 检查用户是否已登录
         async function checkUser() {
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user } } = await window.supabase.auth.getUser();
             if (user) {
                 // 登录成功，跳转到主应用页面
                 window.location.href = 'app.html';
@@ -266,7 +265,7 @@
                 console.log('开始登录...');
                 console.log('邮箱:', email);
 
-                const { data, error } = await supabase.auth.signInWithPassword({
+                const { data, error } = await window.supabase.auth.signInWithPassword({
                     email,
                     password
                 });
@@ -296,7 +295,7 @@
                     return;
                 }
 
-                const { data, error } = await supabase.auth.signUp({
+                const { data, error } = await window.supabase.auth.signUp({
                     email: email || undefined,
                     password
                 });
