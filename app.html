@@ -583,7 +583,13 @@
         const supabaseAnonKey = 'sb_publishable_6fgteWV1lGxwi4Tgx_PuLQ_w1XiEmPF';
 
         // 初始化Supabase客户端
-        const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+        let supabase;
+        if (typeof window.supabase === 'undefined') {
+            supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+            window.supabase = supabase;
+        } else {
+            supabase = window.supabase;
+        }
 
         // 全局变量
         let currentUser = null;
