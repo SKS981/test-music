@@ -260,16 +260,24 @@
                 const email = document.getElementById('login-email').value;
                 const password = document.getElementById('login-password').value;
 
+                console.log('开始登录...');
+                console.log('邮箱:', email);
+
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email,
                     password
                 });
 
                 if (error) {
+                    console.error('登录失败:', error);
                     showMessage('error', error.message);
                 } else {
+                    console.log('登录成功:', data);
+                    console.log('准备跳转到app.html...');
                     // 登录成功，跳转到主应用页面
-                    window.location.href = 'app.html';
+                    setTimeout(() => {
+                        window.location.href = 'app.html';
+                    }, 1000);
                 }
             });
 
