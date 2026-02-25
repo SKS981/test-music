@@ -583,8 +583,16 @@
         const supabaseAnonKey = 'sb_publishable_6fgteWV1lGxwi4Tgx_PuLQ_w1XiEmPF';
 
         // 初始化Supabase客户端
-        // 直接使用全局 supabase 对象创建客户端
-        window.supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+        // 使用 try-catch 避免变量重复声明错误
+        try {
+            // 初始化Supabase客户端
+            if (!window.supabase || !window.supabase.auth) {
+                // 使用全局 supabase 对象创建客户端
+                window.supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+            }
+        } catch (e) {
+            console.error('Supabase初始化错误:', e);
+        }
 
         // 全局变量
         let currentUser = null;
@@ -598,22 +606,28 @@
         async function checkUser() {
             console.log('开始检查用户登录状态...');
             try {
-                const { data, error } = await window.supabase.auth.getUser();
-                console.log('认证检查结果:', { data, error });
-                
-                if (error) {
-                    console.error('认证检查失败:', error);
-                    // 用户未登录，跳转到登录页面
-                    window.location.href = 'index.html';
-                } else if (!data.user) {
-                    console.log('用户未登录，跳转到登录页面...');
-                    // 用户未登录，跳转到登录页面
-                    window.location.href = 'index.html';
+                if (window.supabase && window.supabase.auth) {
+                    const { data, error } = await window.supabase.auth.getUser();
+                    console.log('认证检查结果:', { data, error });
+                    
+                    if (error) {
+                        console.error('认证检查失败:', error);
+                        // 用户未登录，跳转到登录页面
+                        window.location.href = 'index.html';
+                    } else if (!data.user) {
+                        console.log('用户未登录，跳转到登录页面...');
+                        // 用户未登录，跳转到登录页面
+                        window.location.href = 'index.html';
+                    } else {
+                        console.log('用户已登录:', data.user);
+                        currentUser = data.user;
+                        document.getElementById('user-email').textContent = data.user.email || '用户';
+                        loadContacts();
+                    }
                 } else {
-                    console.log('用户已登录:', data.user);
-                    currentUser = data.user;
-                    document.getElementById('user-email').textContent = data.user.email || '用户';
-                    loadContacts();
+                    console.error('Supabase未初始化，跳转到登录页面...');
+                    // Supabase未初始化，跳转到登录页面
+                    window.location.href = 'index.html';
                 }
             } catch (err) {
                 console.error('认证检查过程中发生错误:', err);
@@ -624,51 +638,55 @@
 
         // 加载联系人
         async function loadContacts() {
-            if (!currentUser) return;
+            if (!currentUser || !window.supabase) return;
 
-            const { data: contacts, error } = await window.supabase
-                .from('contacts')
-                .select('*')
-                .eq('user_id', currentUser.id);
+            try {
+                const { data: contacts, error } = await window.supabase
+                    .from('contacts')
+                    .select('*')
+                    .eq('user_id', currentUser.id);
 
-            if (error) {
-                console.error('加载联系人失败:', error);
-                return;
-            }
+                if (error) {
+                    console.error('加载联系人失败:', error);
+                    return;
+                }
 
-            const contactsList = document.getElementById('contacts-list');
-            const relicContactSelect = document.getElementById('relic-contact');
+                const contactsList = document.getElementById('contacts-list');
+                const relicContactSelect = document.getElementById('relic-contact');
 
-            contactsList.innerHTML = '';
-            relicContactSelect.innerHTML = '';
+                contactsList.innerHTML = '';
+                relicContactSelect.innerHTML = '';
 
-            // 添加默认选项
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.textContent = '请选择联系人';
-            relicContactSelect.appendChild(defaultOption);
+                // 添加默认选项
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '请选择联系人';
+                relicContactSelect.appendChild(defaultOption);
 
-            contacts.forEach(contact => {
-                // 添加到联系人列表
-                const contactItem = document.createElement('div');
-                contactItem.className = 'contact-item';
-                contactItem.dataset.id = contact.id;
-                contactItem.innerHTML = `
-                    <h3>${contact.name}</h3>
-                    <p>${contact.email || '无邮箱'}</p>
-                    <p>${contact.phone || '无电话'}</p>
-                `;
-                contactItem.addEventListener('click', () => {
-                    selectContact(contact);
+                contacts.forEach(contact => {
+                    // 添加到联系人列表
+                    const contactItem = document.createElement('div');
+                    contactItem.className = 'contact-item';
+                    contactItem.dataset.id = contact.id;
+                    contactItem.innerHTML = `
+                        <h3>${contact.name}</h3>
+                        <p>${contact.email || '无邮箱'}</p>
+                        <p>${contact.phone || '无电话'}</p>
+                    `;
+                    contactItem.addEventListener('click', () => {
+                        selectContact(contact);
+                    });
+                    contactsList.appendChild(contactItem);
+
+                    // 添加到遗物表单的选择框
+                    const option = document.createElement('option');
+                    option.value = contact.id;
+                    option.textContent = contact.name;
+                    relicContactSelect.appendChild(option);
                 });
-                contactsList.appendChild(contactItem);
-
-                // 添加到遗物表单的选择框
-                const option = document.createElement('option');
-                option.value = contact.id;
-                option.textContent = contact.name;
-                relicContactSelect.appendChild(option);
-            });
+            } catch (e) {
+                console.error('加载联系人过程中发生错误:', e);
+            }
         }
 
         // 选择联系人
@@ -690,43 +708,47 @@
 
         // 加载遗物
         async function loadRelics(contactId) {
-            if (!currentUser || !contactId) return;
+            if (!currentUser || !contactId || !window.supabase) return;
 
-            const { data: relics, error } = await window.supabase
-                .from('relics')
-                .select('*')
-                .eq('user_id', currentUser.id)
-                .eq('contact_id', contactId);
+            try {
+                const { data: relics, error } = await window.supabase
+                    .from('relics')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .eq('contact_id', contactId);
 
-            if (error) {
-                console.error('加载遗物失败:', error);
-                return;
+                if (error) {
+                    console.error('加载遗物失败:', error);
+                    return;
+                }
+
+                const relicsList = document.getElementById('relics-list');
+                relicsList.innerHTML = '<h4>已创建的遗物</h4>';
+
+                if (relics.length === 0) {
+                    relicsList.innerHTML += '<p>暂无遗物，点击上方按钮创建</p>';
+                    return;
+                }
+
+                relics.forEach(relic => {
+                    const relicItem = document.createElement('div');
+                    relicItem.className = 'relic-item';
+                    relicItem.innerHTML = `
+                        <h5>${relic.title}</h5>
+                        <p>${relic.content}</p>
+                        ${relic.ai_enhanced_content ? `<p><strong>AI润色:</strong> ${relic.ai_enhanced_content}</p>` : ''}
+                        <p><strong>沉默阈值:</strong> ${relic.silence_threshold_days}天</p>
+                        <p><strong>创建时间:</strong> ${new Date(relic.created_at).toLocaleString()}</p>
+                        <div class="relic-actions">
+                            ${relic.audio_url ? `<button onclick="playAudio('${relic.audio_url}')">播放音频</button>` : ''}
+                            ${relic.video_url ? `<button onclick="playVideo('${relic.video_url}')">播放视频</button>` : ''}
+                        </div>
+                    `;
+                    relicsList.appendChild(relicItem);
+                });
+            } catch (e) {
+                console.error('加载遗物过程中发生错误:', e);
             }
-
-            const relicsList = document.getElementById('relics-list');
-            relicsList.innerHTML = '<h4>已创建的遗物</h4>';
-
-            if (relics.length === 0) {
-                relicsList.innerHTML += '<p>暂无遗物，点击上方按钮创建</p>';
-                return;
-            }
-
-            relics.forEach(relic => {
-                const relicItem = document.createElement('div');
-                relicItem.className = 'relic-item';
-                relicItem.innerHTML = `
-                    <h5>${relic.title}</h5>
-                    <p>${relic.content}</p>
-                    ${relic.ai_enhanced_content ? `<p><strong>AI润色:</strong> ${relic.ai_enhanced_content}</p>` : ''}
-                    <p><strong>沉默阈值:</strong> ${relic.silence_threshold_days}天</p>
-                    <p><strong>创建时间:</strong> ${new Date(relic.created_at).toLocaleString()}</p>
-                    <div class="relic-actions">
-                        ${relic.audio_url ? `<button onclick="playAudio('${relic.audio_url}')">播放音频</button>` : ''}
-                        ${relic.video_url ? `<button onclick="playVideo('${relic.video_url}')">播放视频</button>` : ''}
-                    </div>
-                `;
-                relicsList.appendChild(relicItem);
-            });
         }
 
         // 播放音频
@@ -838,7 +860,7 @@
 
         // 上传到Supabase Storage
         async function uploadToStorage(blob) {
-            if (!currentUser) return;
+            if (!currentUser || !window.supabase) return;
 
             try {
                 const fileName = `${currentUser.id}/${Date.now()}.${isCameraOn ? 'webm' : 'webm'}`;
@@ -927,25 +949,34 @@
                 const email = document.getElementById('contact-email').value;
                 const phone = document.getElementById('contact-phone').value;
 
-                const { data, error } = await window.supabase
-                    .from('contacts')
-                    .insert({
-                        user_id: currentUser.id,
-                        name,
-                        email: email || null,
-                        phone: phone || null
-                    });
+                try {
+                    if (window.supabase) {
+                        const { data, error } = await window.supabase
+                            .from('contacts')
+                            .insert({
+                                user_id: currentUser.id,
+                                name,
+                                email: email || null,
+                                phone: phone || null
+                            });
 
-                if (error) {
-                    console.error('添加联系人失败:', error);
-                    showMessage('contact-message', 'error', '添加联系人失败，请重试');
-                    return;
-                }
+                        if (error) {
+                            console.error('添加联系人失败:', error);
+                            showMessage('contact-message', 'error', '添加联系人失败，请重试');
+                            return;
+                        }
 
-                showMessage('contact-message', 'success', '联系人添加成功');
-                modal.classList.remove('active');
-                contactForm.reset();
-                loadContacts();
+                        showMessage('contact-message', 'success', '联系人添加成功');
+                        modal.classList.remove('active');
+                        contactForm.reset();
+                        loadContacts();
+                    } else {
+                        showMessage('contact-message', 'error', 'Supabase未初始化，请刷新页面重试');
+                    }
+            } catch (e) {
+                console.error('添加联系人过程中发生错误:', e);
+                showMessage('contact-message', 'error', '添加联系人过程中发生错误，请重试');
+            }
             });
         }
 
@@ -985,36 +1016,56 @@
                     return;
                 }
 
-                const { data, error } = await window.supabase
-                    .from('relics')
-                    .insert({
-                        user_id: currentUser.id,
-                        contact_id: contactId,
-                        title,
-                        content,
-                        ai_enhanced_content: content, // 暂时使用原始内容，实际应用中可以使用AI润色结果
-                        silence_threshold_days: silenceThreshold
-                    });
+                try {
+                    if (window.supabase) {
+                        const { data, error } = await window.supabase
+                            .from('relics')
+                            .insert({
+                                user_id: currentUser.id,
+                                contact_id: contactId,
+                                title,
+                                content,
+                                ai_enhanced_content: content, // 暂时使用原始内容，实际应用中可以使用AI润色结果
+                                silence_threshold_days: silenceThreshold
+                            });
 
-                if (error) {
-                    console.error('创建遗物失败:', error);
-                    showMessage('recording-message', 'error', '创建遗物失败，请重试');
-                    return;
+                        if (error) {
+                            console.error('创建遗物失败:', error);
+                            showMessage('recording-message', 'error', '创建遗物失败，请重试');
+                            return;
+                        }
+
+                        showMessage('recording-message', 'success', '遗物创建成功');
+                        relicForm.reset();
+                        loadRelics(contactId);
+                    } else {
+                        showMessage('recording-message', 'error', 'Supabase未初始化，请刷新页面重试');
+                    }
+                } catch (e) {
+                    console.error('创建遗物过程中发生错误:', e);
+                    showMessage('recording-message', 'error', '创建遗物过程中发生错误，请重试');
                 }
-
-                showMessage('recording-message', 'success', '遗物创建成功');
-                relicForm.reset();
-                loadRelics(contactId);
             });
         }
 
         // 初始化退出登录
         function initLogout() {
             document.getElementById('logout-btn').addEventListener('click', async () => {
-                const { error } = await window.supabase.auth.signOut();
-                if (error) {
-                    console.error('退出登录失败:', error);
-                } else {
+                try {
+                    if (window.supabase && window.supabase.auth) {
+                        const { error } = await window.supabase.auth.signOut();
+                        if (error) {
+                            console.error('退出登录失败:', error);
+                        } else {
+                            window.location.href = 'index.html';
+                        }
+                    } else {
+                        // Supabase未初始化，直接跳转到登录页面
+                        window.location.href = 'index.html';
+                    }
+                } catch (e) {
+                    console.error('退出登录过程中发生错误:', e);
+                    // 发生错误，直接跳转到登录页面
                     window.location.href = 'index.html';
                 }
             });

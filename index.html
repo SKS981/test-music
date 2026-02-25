@@ -216,20 +216,34 @@
     </div>
 
     <script>
-        // Supabase配置
-        const supabaseUrl = 'https://gdvdbzxxgwbjeaynjimp.supabase.co';
-        const supabaseAnonKey = 'sb_publishable_6fgteWV1lGxwi4Tgx_PuLQ_w1XiEmPF';
-
         // 初始化Supabase客户端
-        // 直接使用全局 supabase 对象创建客户端
-        window.supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+        // 使用 try-catch 避免变量重复声明错误
+        try {
+            // Supabase配置
+            const supabaseUrl = 'https://gdvdbzxxgwbjeaynjimp.supabase.co';
+            const supabaseAnonKey = 'sb_publishable_6fgteWV1lGxwi4Tgx_PuLQ_w1XiEmPF';
+
+            // 初始化Supabase客户端
+            if (!window.supabase || !window.supabase.auth) {
+                // 使用全局 supabase 对象创建客户端
+                window.supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+            }
+        } catch (e) {
+            console.error('Supabase初始化错误:', e);
+        }
 
         // 检查用户是否已登录
         async function checkUser() {
-            const { data: { user } } = await window.supabase.auth.getUser();
-            if (user) {
-                // 登录成功，跳转到主应用页面
-                window.location.href = 'app.html';
+            if (window.supabase && window.supabase.auth) {
+                try {
+                    const { data: { user } } = await window.supabase.auth.getUser();
+                    if (user) {
+                        // 登录成功，跳转到主应用页面
+                        window.location.href = 'app.html';
+                    }
+                } catch (e) {
+                    console.error('检查用户登录状态错误:', e);
+                }
             }
         }
 
@@ -264,21 +278,30 @@
                 console.log('开始登录...');
                 console.log('邮箱:', email);
 
-                const { data, error } = await window.supabase.auth.signInWithPassword({
-                    email,
-                    password
-                });
+                try {
+                    if (window.supabase && window.supabase.auth) {
+                        const { data, error } = await window.supabase.auth.signInWithPassword({
+                            email,
+                            password
+                        });
 
-                if (error) {
-                    console.error('登录失败:', error);
-                    showMessage('error', error.message);
-                } else {
-                    console.log('登录成功:', data);
-                    console.log('准备跳转到app.html...');
-                    // 登录成功，跳转到主应用页面
-                    setTimeout(() => {
-                        window.location.href = 'app.html';
-                    }, 1000);
+                        if (error) {
+                            console.error('登录失败:', error);
+                            showMessage('error', error.message);
+                        } else {
+                            console.log('登录成功:', data);
+                            console.log('准备跳转到app.html...');
+                            // 登录成功，跳转到主应用页面
+                            setTimeout(() => {
+                                window.location.href = 'app.html';
+                            }, 1000);
+                        }
+                    } else {
+                        showMessage('error', 'Supabase初始化失败，请刷新页面重试');
+                    }
+                } catch (e) {
+                    console.error('登录过程中发生错误:', e);
+                    showMessage('error', '登录过程中发生错误，请重试');
                 }
             });
 
@@ -294,17 +317,26 @@
                     return;
                 }
 
-                const { data, error } = await window.supabase.auth.signUp({
-                    email: email || undefined,
-                    password
-                });
+                try {
+                    if (window.supabase && window.supabase.auth) {
+                        const { data, error } = await window.supabase.auth.signUp({
+                            email: email || undefined,
+                            password
+                        });
 
-                if (error) {
-                    showMessage('error', error.message);
-                } else {
-                    showMessage('success', '注册成功，请登录');
-                    // 切换到登录表单
-                    document.querySelector('.tab[data-form="login"]').click();
+                        if (error) {
+                            showMessage('error', error.message);
+                        } else {
+                            showMessage('success', '注册成功，请登录');
+                            // 切换到登录表单
+                            document.querySelector('.tab[data-form="login"]').click();
+                        }
+                    } else {
+                        showMessage('error', 'Supabase初始化失败，请刷新页面重试');
+                    }
+                } catch (e) {
+                    console.error('注册过程中发生错误:', e);
+                    showMessage('error', '注册过程中发生错误，请重试');
                 }
             });
         }
