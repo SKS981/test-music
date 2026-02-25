@@ -595,14 +595,29 @@
 
         // 检查用户登录状态
         async function checkUser() {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                // 用户未登录，跳转到登录页面
+            console.log('开始检查用户登录状态...');
+            try {
+                const { data, error } = await supabase.auth.getUser();
+                console.log('认证检查结果:', { data, error });
+                
+                if (error) {
+                    console.error('认证检查失败:', error);
+                    // 用户未登录，跳转到登录页面
+                    window.location.href = 'index.html';
+                } else if (!data.user) {
+                    console.log('用户未登录，跳转到登录页面...');
+                    // 用户未登录，跳转到登录页面
+                    window.location.href = 'index.html';
+                } else {
+                    console.log('用户已登录:', data.user);
+                    currentUser = data.user;
+                    document.getElementById('user-email').textContent = data.user.email || '用户';
+                    loadContacts();
+                }
+            } catch (err) {
+                console.error('认证检查过程中发生错误:', err);
+                // 发生错误，跳转到登录页面
                 window.location.href = 'index.html';
-            } else {
-                currentUser = user;
-                document.getElementById('user-email').textContent = user.email || '用户';
-                loadContacts();
             }
         }
 
