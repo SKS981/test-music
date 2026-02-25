@@ -217,8 +217,7 @@
 
     <script>
         // 初始化Supabase客户端
-        // 使用立即执行函数表达式创建独立作用域
-        (function() {
+        function initializeSupabase() {
             // Supabase配置
             const supabaseUrl = 'https://gdvdbzxxgwbjeaynjimp.supabase.co';
             const supabaseAnonKey = 'sb_publishable_6fgteWV1lGxwi4Tgx_PuLQ_w1XiEmPF';
@@ -230,14 +229,33 @@
                     if (typeof createClient === 'function') {
                         // 直接使用 createClient 函数创建客户端
                         window.supabase = createClient(supabaseUrl, supabaseAnonKey);
+                        console.log('Supabase客户端初始化成功');
+                    } else if (typeof window.Supabase !== 'undefined' && typeof window.Supabase.createClient === 'function') {
+                        // 尝试使用 window.Supabase.createClient
+                        window.supabase = window.Supabase.createClient(supabaseUrl, supabaseAnonKey);
+                        console.log('Supabase客户端初始化成功（使用 window.Supabase.createClient）');
                     } else {
                         console.error('无法初始化Supabase客户端：createClient函数未找到');
+                        console.log('当前全局对象:', {
+                            createClient: typeof createClient,
+                            Supabase: typeof window.Supabase,
+                            supabase: typeof window.supabase
+                        });
                     }
+                } else {
+                    console.log('Supabase客户端已经存在，跳过初始化');
                 }
             } catch (e) {
                 console.error('Supabase初始化错误:', e);
             }
-        })();
+        }
+
+        // 当页面加载完成后初始化Supabase
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeSupabase);
+        } else {
+            initializeSupabase();
+        }
 
         // 检查用户是否已登录
         async function checkUser() {
