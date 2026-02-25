@@ -580,22 +580,46 @@
     <script>
         // 初始化Supabase客户端
         function initializeSupabase() {
+            // Supabase配置
+            const supabaseUrl = 'https://gdvdbzxxgwbjeaynjimp.supabase.co';
+            const supabaseAnonKey = 'sb_publishable_6fgteWV1lGxwi4Tgx_PuLQ_w1XiEmPF';
+
             try {
-                // 检查是否已经存在 supabase 对象
-                if (typeof window.supabase === 'object') {
-                    if (window.supabase.auth) {
-                        console.log('Supabase客户端已经存在且包含auth属性，直接使用');
-                    } else {
-                        console.log('Supabase客户端已经存在但缺少auth属性');
+                // 检查是否已经存在 supabase 客户端实例
+                if (typeof window.supabase === 'object' && window.supabase.auth) {
+                    console.log('Supabase客户端已经存在且包含auth属性，直接使用');
+                } else {
+                    // 尝试使用不同的方式初始化Supabase客户端
+                    console.log('尝试初始化Supabase客户端...');
+                    
+                    // 方法1：直接使用全局的 createClient 函数
+                    if (typeof createClient === 'function') {
+                        window.supabase = createClient(supabaseUrl, supabaseAnonKey);
+                        console.log('Supabase客户端初始化成功（使用 createClient 函数）');
+                    }
+                    // 方法2：使用 window.supabase.createClient（如果存在）
+                    else if (typeof window.supabase === 'object' && typeof window.supabase.createClient === 'function') {
+                        window.supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+                        console.log('Supabase客户端初始化成功（使用 window.supabase.createClient）');
+                    }
+                    // 方法3：使用 window.Supabase.createClient（如果存在）
+                    else if (typeof window.Supabase === 'object' && typeof window.Supabase.createClient === 'function') {
+                        window.supabase = window.Supabase.createClient(supabaseUrl, supabaseAnonKey);
+                        console.log('Supabase客户端初始化成功（使用 window.Supabase.createClient）');
+                    }
+                    // 方法4：直接使用 CDN 脚本提供的 supabase 对象
+                    else if (typeof window.supabase === 'object') {
+                        console.log('使用现有的 supabase 对象');
                         console.log('当前supabase对象:', window.supabase);
                     }
-                } else {
-                    console.error('Supabase客户端不存在');
-                    console.log('当前全局对象:', {
-                        createClient: typeof createClient,
-                        Supabase: typeof window.Supabase,
-                        supabase: typeof window.supabase
-                    });
+                    else {
+                        console.error('无法初始化Supabase客户端：所有尝试都失败了');
+                        console.log('当前全局对象:', {
+                            createClient: typeof createClient,
+                            Supabase: typeof window.Supabase,
+                            supabase: typeof window.supabase
+                        });
+                    }
                 }
             } catch (e) {
                 console.error('Supabase初始化错误:', e);
