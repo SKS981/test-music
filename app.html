@@ -580,32 +580,22 @@
     <script>
         // 初始化Supabase客户端
         function initializeSupabase() {
-            // Supabase配置
-            const supabaseUrl = 'https://gdvdbzxxgwbjeaynjimp.supabase.co';
-            const supabaseAnonKey = 'sb_publishable_6fgteWV1lGxwi4Tgx_PuLQ_w1XiEmPF';
-
             try {
                 // 检查是否已经存在 supabase 对象
-                if (typeof window.supabase === 'undefined' || !window.supabase.auth) {
-                    // 检查是否存在 createClient 函数
-                    if (typeof createClient === 'function') {
-                        // 直接使用 createClient 函数创建客户端
-                        window.supabase = createClient(supabaseUrl, supabaseAnonKey);
-                        console.log('Supabase客户端初始化成功');
-                    } else if (typeof window.Supabase !== 'undefined' && typeof window.Supabase.createClient === 'function') {
-                        // 尝试使用 window.Supabase.createClient
-                        window.supabase = window.Supabase.createClient(supabaseUrl, supabaseAnonKey);
-                        console.log('Supabase客户端初始化成功（使用 window.Supabase.createClient）');
+                if (typeof window.supabase === 'object') {
+                    if (window.supabase.auth) {
+                        console.log('Supabase客户端已经存在且包含auth属性，直接使用');
                     } else {
-                        console.error('无法初始化Supabase客户端：createClient函数未找到');
-                        console.log('当前全局对象:', {
-                            createClient: typeof createClient,
-                            Supabase: typeof window.Supabase,
-                            supabase: typeof window.supabase
-                        });
+                        console.log('Supabase客户端已经存在但缺少auth属性');
+                        console.log('当前supabase对象:', window.supabase);
                     }
                 } else {
-                    console.log('Supabase客户端已经存在，跳过初始化');
+                    console.error('Supabase客户端不存在');
+                    console.log('当前全局对象:', {
+                        createClient: typeof createClient,
+                        Supabase: typeof window.Supabase,
+                        supabase: typeof window.supabase
+                    });
                 }
             } catch (e) {
                 console.error('Supabase初始化错误:', e);
