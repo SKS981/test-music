@@ -125,6 +125,26 @@
             background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
         }
 
+        /* 登录按钮样式 */
+        .login-button {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            font-size: 1.1em;
+            padding: 14px;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .login-button:hover {
+            background: linear-gradient(135deg, #ee5a6f 0%, #ff6b6b 100%);
+            box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+        }
+
         .message {
             margin-top: 15px;
             padding: 10px;
@@ -191,7 +211,7 @@
                     <label for="login-password">密码</label>
                     <input type="password" id="login-password" required>
                 </div>
-                <button type="submit">登录</button>
+                <button type="submit" class="login-button">登录</button>
             </form>
 
             <!-- 注册表单 -->
