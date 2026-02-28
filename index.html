@@ -285,6 +285,7 @@
             const supabaseAnonKey = 'sb_publishable_6fgteWV1lGxwi4Tgx_PuLQ_w1XiEmPF';
 
             try {
+                // 检查 createClient 函数是否存在
                 if (typeof createClient === 'function') {
                     // 尝试使用不同的存储选项初始化
                     window.supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -317,12 +318,46 @@
                         }
                     });
                     console.log('Supabase初始化成功');
+                } else if (window.supabase && window.supabase.createClient) {
+                    // 尝试使用 window.supabase.createClient
+                    window.supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+                    console.log('使用 window.supabase.createClient 初始化成功');
+                } else if (window.Supabase && window.Supabase.createClient) {
+                    // 尝试使用 window.Supabase.createClient
+                    window.supabase = window.Supabase.createClient(supabaseUrl, supabaseAnonKey);
+                    console.log('使用 window.Supabase.createClient 初始化成功');
                 } else {
                     console.error('Supabase SDK 未加载，createClient 函数未定义');
+                    // 显示友好的错误信息
+                    showMessage('error', 'Supabase SDK 加载失败，请检查网络连接后刷新页面');
                 }
             } catch (e) {
                 console.error('Supabase初始化错误:', e);
+                showMessage('error', 'Supabase初始化失败: ' + e.message);
             }
+        }
+
+        // 动态加载 Supabase SDK
+        function loadSupabaseSDK() {
+            if (typeof createClient === 'function') {
+                // SDK 已经加载
+                initializeSupabase();
+                return;
+            }
+
+            // 动态创建脚本标签
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+            script.async = true;
+            script.onload = function() {
+                console.log('Supabase SDK 动态加载成功');
+                initializeSupabase();
+            };
+            script.onerror = function() {
+                console.error('Supabase SDK 加载失败');
+                showMessage('error', '无法加载 Supabase SDK，请检查网络连接');
+            };
+            document.head.appendChild(script);
         }
 
         // 检查用户是否已登录
@@ -468,8 +503,8 @@
 
         // 初始化应用
         function initializeApp() {
-            // 初始化Supabase
-            initializeSupabase();
+            // 动态加载并初始化Supabase
+            loadSupabaseSDK();
             
             // 检查用户登录状态
             checkUser();
