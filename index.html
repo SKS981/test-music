@@ -14,13 +14,34 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f0f0f0;
             color: #333;
             line-height: 1.6;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #background-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -2;
+        }
+        
+        #background-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
         }
 
         .container {
@@ -30,25 +51,24 @@
         }
 
         .auth-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(5px);
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             text-align: center;
         }
 
         h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: rgba(255, 255, 255, 0.9);
         }
 
         h2 {
             font-size: 1.5em;
             margin-bottom: 20px;
-            color: #444;
+            color: rgba(255, 255, 255, 0.8);
         }
 
         .tabs {
@@ -60,8 +80,10 @@
         .tab {
             flex: 1;
             padding: 12px;
-            background: #f5f5f5;
-            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom: none;
             cursor: pointer;
             font-size: 1em;
             transition: all 0.3s ease;
@@ -69,14 +91,16 @@
         }
 
         .tab:hover {
-            background: #e8e8e8;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
         }
 
         .tab.active {
-            background: white;
-            border-bottom: 2px solid #667eea;
+            background: rgba(74, 144, 226, 0.1);
+            color: white;
+            border: 1px solid rgba(74, 144, 226, 0.5);
+            border-bottom: 1px solid rgba(74, 144, 226, 0.5);
             font-weight: 600;
-            box-shadow: 0 -2px 8px rgba(102, 126, 234, 0.2);
         }
 
         .form {
@@ -99,55 +123,65 @@
 
         label {
             font-weight: 600;
-            color: #555;
+            color: rgba(255, 255, 255, 0.8);
         }
 
         input {
             padding: 12px;
-            border: 1px solid #ddd;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.9);
             border-radius: 5px;
             font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        input:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
         }
 
         input:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+            border-color: #4A90E2;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
         }
 
         button {
             padding: 12px;
-            border: none;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            border: 1px solid rgba(74, 144, 226, 0.5);
+            background: rgba(74, 144, 226, 0.1);
+            color: rgba(255, 255, 255, 0.9);
             border-radius: 5px;
             cursor: pointer;
             font-size: 1em;
             font-weight: 600;
-            transition: background 0.3s;
+            transition: all 0.3s;
         }
         button:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            background: rgba(74, 144, 226, 0.2);
+            border-color: rgba(74, 144, 226, 0.8);
         }
 
         /* 登录按钮样式 */
         .login-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: rgba(74, 144, 226, 0.1);
+            border: 1px solid rgba(74, 144, 226, 0.5);
             font-size: 1.1em;
             padding: 14px;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
             transition: all 0.3s ease;
         }
 
         .login-button:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+            background: rgba(74, 144, 226, 0.2);
+            border-color: rgba(74, 144, 226, 0.8);
             transform: translateY(-2px);
         }
 
         .login-button:active {
             transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
         }
 
         .message {
@@ -196,6 +230,10 @@
     </style>
 </head>
 <body>
+    <video id="background-video" src="htwo.mp4" autoplay muted loop playsinline>
+        您的浏览器不支持视频标签。
+    </video>
+    <canvas id="background-canvas"></canvas>
     <div class="container">
         <div class="auth-card">
             <h1>时光留声</h1>
@@ -243,57 +281,16 @@
     <script>
         // 初始化Supabase客户端
         function initializeSupabase() {
-            // Supabase配置
             const supabaseUrl = 'https://gdvdbzxxgwbjeaynjimp.supabase.co';
             const supabaseAnonKey = 'sb_publishable_6fgteWV1lGxwi4Tgx_PuLQ_w1XiEmPF';
 
             try {
-                // 检查是否已经存在 supabase 客户端实例
-                if (typeof window.supabase === 'object' && window.supabase.auth) {
-                    console.log('Supabase客户端已经存在且包含auth属性，直接使用');
-                } else {
-                    // 尝试使用不同的方式初始化Supabase客户端
-                    console.log('尝试初始化Supabase客户端...');
-                    
-                    // 方法1：直接使用全局的 createClient 函数
-                    if (typeof createClient === 'function') {
-                        window.supabase = createClient(supabaseUrl, supabaseAnonKey);
-                        console.log('Supabase客户端初始化成功（使用 createClient 函数）');
-                    }
-                    // 方法2：使用 window.supabase.createClient（如果存在）
-                    else if (typeof window.supabase === 'object' && typeof window.supabase.createClient === 'function') {
-                        window.supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-                        console.log('Supabase客户端初始化成功（使用 window.supabase.createClient）');
-                    }
-                    // 方法3：使用 window.Supabase.createClient（如果存在）
-                    else if (typeof window.Supabase === 'object' && typeof window.Supabase.createClient === 'function') {
-                        window.supabase = window.Supabase.createClient(supabaseUrl, supabaseAnonKey);
-                        console.log('Supabase客户端初始化成功（使用 window.Supabase.createClient）');
-                    }
-                    // 方法4：直接使用 CDN 脚本提供的 supabase 对象
-                    else if (typeof window.supabase === 'object') {
-                        console.log('使用现有的 supabase 对象');
-                        console.log('当前supabase对象:', window.supabase);
-                    }
-                    else {
-                        console.error('无法初始化Supabase客户端：所有尝试都失败了');
-                        console.log('当前全局对象:', {
-                            createClient: typeof createClient,
-                            Supabase: typeof window.Supabase,
-                            supabase: typeof window.supabase
-                        });
-                    }
+                if (typeof createClient === 'function') {
+                    window.supabase = createClient(supabaseUrl, supabaseAnonKey);
                 }
             } catch (e) {
                 console.error('Supabase初始化错误:', e);
             }
-        }
-
-        // 当页面加载完成后初始化Supabase
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeSupabase);
-        } else {
-            initializeSupabase();
         }
 
         // 检查用户是否已登录
@@ -302,7 +299,6 @@
                 try {
                     const { data: { user } } = await window.supabase.auth.getUser();
                     if (user) {
-                        // 登录成功，跳转到主应用页面
                         window.location.href = 'app.html';
                     }
                 } catch (e) {
@@ -311,8 +307,138 @@
             }
         }
 
-        // 初始化
-        function init() {
+        // 显示消息
+        function showMessage(type, message) {
+            const messageElement = document.getElementById('message');
+            messageElement.className = `message ${type}`;
+            messageElement.textContent = message;
+        }
+
+        // Canvas背景交互效果
+        class BackgroundCanvas {
+            constructor() {
+                this.canvas = document.getElementById('background-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.video = document.getElementById('background-video');
+                this.originalImageData = null;
+                this.mousePos = { x: 0, y: 0 };
+                this.strength = 15;
+                this.radius = 100;
+                this.isVideoReady = false;
+                
+                this.resizeCanvas();
+                window.addEventListener('resize', () => this.resizeCanvas());
+                document.addEventListener('mousemove', (e) => this.updateMousePos(e));
+                
+                // 视频加载完成后初始化
+                this.video.addEventListener('loadeddata', () => {
+                    this.isVideoReady = true;
+                    this.startVideoLoop();
+                });
+                
+                // 视频错误处理
+                this.video.addEventListener('error', () => {
+                    this.useDefaultBackground();
+                });
+            }
+            
+            resizeCanvas() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+            
+            updateMousePos(e) {
+                this.mousePos.x = e.clientX;
+                this.mousePos.y = e.clientY;
+            }
+            
+            startVideoLoop() {
+                const loop = () => {
+                    if (this.isVideoReady) {
+                        this.drawVideoFrame();
+                        this.animate();
+                    }
+                    requestAnimationFrame(loop);
+                };
+                loop();
+            }
+            
+            drawVideoFrame() {
+                if (!this.isVideoReady) return;
+                
+                // 绘制视频帧
+                this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+                
+                // 保存原始图像数据
+                this.originalImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+            }
+            
+            useDefaultBackground() {
+                // 视频加载失败时使用默认背景
+                this.canvas.width = this.canvas.width; // 清空画布
+                const gradient = this.ctx.createLinearGradient(0, 0, this.canvas.width, this.canvas.height);
+                gradient.addColorStop(0, '#4A90E2');
+                gradient.addColorStop(1, '#5B9EF3');
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                this.originalImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+            }
+            
+            animate() {
+                if (!this.originalImageData) return;
+                
+                // 创建新的图像数据
+                const imageData = this.ctx.createImageData(this.canvas.width, this.canvas.height);
+                const data = imageData.data;
+                const originalData = this.originalImageData.data;
+                
+                // 处理每个像素
+                for (let y = 0; y < this.canvas.height; y++) {
+                    for (let x = 0; x < this.canvas.width; x++) {
+                        const index = (y * this.canvas.width + x) * 4;
+                        
+                        // 计算像素到鼠标的距离
+                        const dx = x - this.mousePos.x;
+                        const dy = y - this.mousePos.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // 只处理鼠标附近的像素
+                        if (distance < this.radius) {
+                            // 计算偏移量，距离越近偏移越大
+                            const strength = (1 - distance / this.radius) * this.strength;
+                            const offsetX = (dx / distance) * strength;
+                            const offsetY = (dy / distance) * strength;
+                            
+                            // 计算偏移后的像素位置
+                            const sourceX = Math.max(0, Math.min(this.canvas.width - 1, Math.floor(x + offsetX)));
+                            const sourceY = Math.max(0, Math.min(this.canvas.height - 1, Math.floor(y + offsetY)));
+                            const sourceIndex = (sourceY * this.canvas.width + sourceX) * 4;
+                            
+                            // 复制像素值
+                            data[index] = originalData[sourceIndex];     // R
+                            data[index + 1] = originalData[sourceIndex + 1]; // G
+                            data[index + 2] = originalData[sourceIndex + 2]; // B
+                            data[index + 3] = originalData[sourceIndex + 3]; // A
+                        } else {
+                            // 远处的像素保持不变
+                            data[index] = originalData[index];
+                            data[index + 1] = originalData[index + 1];
+                            data[index + 2] = originalData[index + 2];
+                            data[index + 3] = originalData[index + 3];
+                        }
+                    }
+                }
+                
+                // 绘制处理后的图像
+                this.ctx.putImageData(imageData, 0, 0);
+            }
+        }
+
+        // 初始化应用
+        function initializeApp() {
+            // 初始化Supabase
+            initializeSupabase();
+            
             // 检查用户登录状态
             checkUser();
 
@@ -339,9 +465,6 @@
                 const email = document.getElementById('login-email').value;
                 const password = document.getElementById('login-password').value;
 
-                console.log('开始登录...');
-                console.log('邮箱:', email);
-
                 try {
                     if (window.supabase && window.supabase.auth) {
                         const { data, error } = await window.supabase.auth.signInWithPassword({
@@ -350,22 +473,42 @@
                         });
 
                         if (error) {
-                            console.error('登录失败:', error);
                             showMessage('error', error.message);
+                            // 登录失败时切换到 rad.png 背景
+                            const video = document.getElementById('background-video');
+                            const canvas = document.getElementById('background-canvas');
+                            video.style.display = 'none';
+                            canvas.style.display = 'none';
+                            document.body.style.backgroundImage = 'url(rad.png)';
+                            document.body.style.backgroundSize = 'cover';
+                            document.body.style.backgroundPosition = 'center';
                         } else {
-                            console.log('登录成功:', data);
-                            console.log('准备跳转到app.html...');
-                            // 登录成功，跳转到主应用页面
                             setTimeout(() => {
                                 window.location.href = 'app.html';
                             }, 1000);
                         }
                     } else {
                         showMessage('error', 'Supabase初始化失败，请刷新页面重试');
+                        // 初始化失败时也切换到 rad.png 背景
+                        const video = document.getElementById('background-video');
+                        const canvas = document.getElementById('background-canvas');
+                        video.style.display = 'none';
+                        canvas.style.display = 'none';
+                        document.body.style.backgroundImage = 'url(rad.png)';
+                        document.body.style.backgroundSize = 'cover';
+                        document.body.style.backgroundPosition = 'center';
                     }
                 } catch (e) {
                     console.error('登录过程中发生错误:', e);
                     showMessage('error', '登录过程中发生错误，请重试');
+                    // 发生错误时切换到 rad.png 背景
+                    const video = document.getElementById('background-video');
+                    const canvas = document.getElementById('background-canvas');
+                    video.style.display = 'none';
+                    canvas.style.display = 'none';
+                    document.body.style.backgroundImage = 'url(rad.png)';
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
                 }
             });
 
@@ -403,17 +546,17 @@
                     showMessage('error', '注册过程中发生错误，请重试');
                 }
             });
+            
+            // 初始化Canvas背景
+            new BackgroundCanvas();
         }
-
-        // 显示消息
-        function showMessage(type, message) {
-            const messageElement = document.getElementById('message');
-            messageElement.className = `message ${type}`;
-            messageElement.textContent = message;
+        
+        // 页面加载完成后初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
         }
-
-        // 初始化应用
-        init();
     </script>
 </body>
 </html>
