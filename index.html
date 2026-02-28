@@ -286,7 +286,39 @@
 
             try {
                 if (typeof createClient === 'function') {
-                    window.supabase = createClient(supabaseUrl, supabaseAnonKey);
+                    // 尝试使用不同的存储选项初始化
+                    window.supabase = createClient(supabaseUrl, supabaseAnonKey, {
+                        auth: {
+                            storage: {
+                                // 尝试使用内存存储作为备选
+                                getItem: (key) => {
+                                    try {
+                                        return localStorage.getItem(key);
+                                    } catch (e) {
+                                        console.log('localStorage 不可用，使用内存存储');
+                                        return null;
+                                    }
+                                },
+                                setItem: (key, value) => {
+                                    try {
+                                        localStorage.setItem(key, value);
+                                    } catch (e) {
+                                        console.log('localStorage 不可用，使用内存存储');
+                                    }
+                                },
+                                removeItem: (key) => {
+                                    try {
+                                        localStorage.removeItem(key);
+                                    } catch (e) {
+                                        console.log('localStorage 不可用，使用内存存储');
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    console.log('Supabase初始化成功');
+                } else {
+                    console.error('Supabase SDK 未加载，createClient 函数未定义');
                 }
             } catch (e) {
                 console.error('Supabase初始化错误:', e);
@@ -318,7 +350,7 @@
         class BackgroundCanvas {
             constructor() {
                 this.canvas = document.getElementById('background-canvas');
-                this.ctx = this.canvas.getContext('2d');
+                this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
                 this.video = document.getElementById('background-video');
                 this.originalImageData = null;
                 this.mousePos = { x: 0, y: 0 };
