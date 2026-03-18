@@ -299,19 +299,14 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             flex-direction: column;
-        }
-
-        .relic-form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 20px;
+            min-height: 500px;
         }
 
         .relic-section h3 {
             margin-bottom: 20px;
             color: white;
             text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+            flex-shrink: 0;
         }
 
         .relic-form {
@@ -413,10 +408,10 @@
         }
 
         .relics-list {
-            margin-top: 30px;
-            max-height: 300px;
+            margin-top: 20px;
             overflow-y: auto;
             flex: 1;
+            min-height: 200px;
         }
 
         .relics-list::-webkit-scrollbar {
