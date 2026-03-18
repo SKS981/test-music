@@ -32,7 +32,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            z-index: -2;
+            z-index: -1;
         }
         
         #background-canvas {
@@ -41,7 +41,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1;
+            z-index: -2;
         }
 
         .container {
@@ -230,6 +230,10 @@
     </style>
 </head>
 <body>
+    <video id="background-video" autoplay muted loop playsinline>
+        <source src="hhzz.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
     <canvas id="background-canvas"></canvas>
     <div class="container">
         <div class="auth-card">
@@ -257,7 +261,7 @@
             <!-- 注册表单 -->
             <form class="form" id="register-form">
                 <div class="form-group">
-                    <label for="register-email">邮箱 <span class="optional">(可选)</span></label>
+                    <label for="register-email">邮箱 <span class="optional">(必选)</span></label>
                     <input type="email" id="register-email">
                 </div>
                 <div class="form-group">
@@ -413,20 +417,12 @@
             }
             
             loadBackgroundImage() {
-                // 使用 rad.png 作为背景图片
-                this.backgroundImage.src = 'rad.png';
-                
-                this.backgroundImage.onload = () => {
-                    this.isImageReady = true;
-                    this.drawBackgroundImage();
-                    this.startAnimationLoop();
-                };
-                
-                this.backgroundImage.onerror = () => {
-                    console.error('背景图片加载失败');
-                    this.useDefaultBackground();
-                    this.startAnimationLoop();
-                };
+                // 不加载背景图片，只提供鼠标交互效果
+                // 因为我们使用视频作为主要背景
+                this.isImageReady = true;
+                // 创建透明的初始图像数据
+                this.originalImageData = this.ctx.createImageData(this.canvas.width, this.canvas.height);
+                this.startAnimationLoop();
             }
             
             drawBackgroundImage() {
@@ -463,50 +459,21 @@
             animate() {
                 if (!this.originalImageData) return;
                 
-                // 创建新的图像数据
-                const imageData = this.ctx.createImageData(this.canvas.width, this.canvas.height);
-                const data = imageData.data;
-                const originalData = this.originalImageData.data;
+                // 清空画布，保持透明
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 
-                // 处理每个像素
-                for (let y = 0; y < this.canvas.height; y++) {
-                    for (let x = 0; x < this.canvas.width; x++) {
-                        const index = (y * this.canvas.width + x) * 4;
-                        
-                        // 计算像素到鼠标的距离
-                        const dx = x - this.mousePos.x;
-                        const dy = y - this.mousePos.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        
-                        // 只处理鼠标附近的像素
-                        if (distance < this.radius) {
-                            // 计算偏移量，距离越近偏移越大
-                            const strength = (1 - distance / this.radius) * this.strength;
-                            const offsetX = (dx / distance) * strength;
-                            const offsetY = (dy / distance) * strength;
-                            
-                            // 计算偏移后的像素位置
-                            const sourceX = Math.max(0, Math.min(this.canvas.width - 1, Math.floor(x + offsetX)));
-                            const sourceY = Math.max(0, Math.min(this.canvas.height - 1, Math.floor(y + offsetY)));
-                            const sourceIndex = (sourceY * this.canvas.width + sourceX) * 4;
-                            
-                            // 复制像素值
-                            data[index] = originalData[sourceIndex];     // R
-                            data[index + 1] = originalData[sourceIndex + 1]; // G
-                            data[index + 2] = originalData[sourceIndex + 2]; // B
-                            data[index + 3] = originalData[sourceIndex + 3]; // A
-                        } else {
-                            // 远处的像素保持不变
-                            data[index] = originalData[index];
-                            data[index + 1] = originalData[index + 1];
-                            data[index + 2] = originalData[index + 2];
-                            data[index + 3] = originalData[index + 3];
-                        }
-                    }
-                }
+                // 只在鼠标附近绘制一个半透明的效果
+                const gradient = this.ctx.createRadialGradient(
+                    this.mousePos.x, this.mousePos.y, 0,
+                    this.mousePos.x, this.mousePos.y, this.radius
+                );
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
                 
-                // 绘制处理后的图像
-                this.ctx.putImageData(imageData, 0, 0);
+                this.ctx.fillStyle = gradient;
+                this.ctx.beginPath();
+                this.ctx.arc(this.mousePos.x, this.mousePos.y, this.radius, 0, Math.PI * 2);
+                this.ctx.fill();
             }
         }
 
