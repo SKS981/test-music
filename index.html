@@ -29,11 +29,14 @@
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             object-fit: cover;
             z-index: -1;
             pointer-events: none;
+            display: block;
+            min-width: 100%;
+            min-height: 100%;
         }
         
         #background-canvas {
@@ -231,7 +234,7 @@
     </style>
 </head>
 <body>
-    <video id="background-video" autoplay muted loop playsinline>
+    <video id="background-video" autoplay muted loop playsinline preload="auto" poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23000'/%3E%3C/svg%3E">
         <source src="hhzz.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
@@ -287,7 +290,12 @@
             
             // 尝试播放视频
             function playVideo() {
-                video.play().catch(error => {
+                console.log('尝试播放视频...');
+                video.play().then(() => {
+                    console.log('视频播放成功');
+                    video.style.display = 'block';
+                    document.body.style.background = 'transparent';
+                }).catch(error => {
                     console.log('视频自动播放失败:', error);
                     // 视频播放失败时，使用备用背景
                     video.style.display = 'none';
@@ -298,9 +306,24 @@
             // 立即尝试播放
             playVideo();
             
-            // 监听用户交互，在用户触摸屏幕时尝试播放
-            document.addEventListener('touchstart', playVideo, { once: true });
-            document.addEventListener('click', playVideo, { once: true });
+            // 监听多种用户交互事件，增加播放成功率
+            const events = ['touchstart', 'click', 'touchend', 'mousedown', 'mouseup', 'keydown'];
+            events.forEach(event => {
+                document.addEventListener(event, playVideo, { once: true });
+            });
+            
+            // 监听视频加载完成事件
+            video.addEventListener('loadedmetadata', () => {
+                console.log('视频元数据加载完成');
+                playVideo();
+            });
+            
+            // 监听视频加载错误事件
+            video.addEventListener('error', (e) => {
+                console.log('视频加载错误:', e);
+                video.style.display = 'none';
+                document.body.style.background = '#000';
+            });
         }
         
         // 初始化Supabase客户端
