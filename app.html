@@ -693,16 +693,16 @@
                         <div class="form-group">
                             <label>沉默阈值</label>
                             <div style="display: flex; gap: 10px;">
-                                <div style="flex: 1; position: relative;">
-                                    <input type="number" id="silence-years" min="0" max="100" value="0" placeholder="0" style="padding-right: 25px;">
+                                <div style="width: 100px; position: relative;">
+                                    <input type="number" id="silence-years" min="0" max="100" value="0" placeholder="0" style="padding-right: 30px; width: 100%;">
                                     <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: rgba(255, 255, 255, 0.7);">年</span>
                                 </div>
-                                <div style="flex: 1; position: relative;">
-                                    <input type="number" id="silence-months" min="0" max="11" value="0" placeholder="0" style="padding-right: 25px;">
+                                <div style="width: 100px; position: relative;">
+                                    <input type="number" id="silence-months" min="0" max="11" value="0" placeholder="0" style="padding-right: 30px; width: 100%;">
                                     <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: rgba(255, 255, 255, 0.7);">月</span>
                                 </div>
-                                <div style="flex: 1; position: relative;">
-                                    <input type="number" id="silence-days" min="1" max="31" value="7" placeholder="7" style="padding-right: 25px;" required>
+                                <div style="width: 100px; position: relative;">
+                                    <input type="number" id="silence-days" min="1" max="31" value="7" placeholder="7" style="padding-right: 30px; width: 100%;" required>
                                     <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: rgba(255, 255, 255, 0.7);">天</span>
                                 </div>
                             </div>
@@ -828,13 +828,6 @@
         let recordedChunks = [];
         let isCameraOn = true;
         let lastUploadedFileUrl = null; // 存储最近上传的文件URL
-
-        // 当页面加载完成后初始化应用
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initApp);
-        } else {
-            initApp();
-        }
 
         // 检查用户登录状态
         async function checkUser() {
@@ -982,8 +975,8 @@
                         <p><strong>沉默阈值:</strong> ${formatSilenceThreshold(relic.silence_threshold_days)}</p>
                         <p><strong>匿名发送:</strong> ${anonymousSend ? '是' : '否'}</p>
                         <p><strong>发送状态:</strong> ${relic.sent ? '已发送' : '未发送'}</p>
-                        ${relic.sent_at ? `<p><strong>发送时间:</strong> ${new Date(relic.sent_at).toLocaleString()}</p>` : ''}
-                        <p><strong>创建时间:</strong> ${new Date(relic.created_at).toLocaleString()}</p>
+                        ${relic.sent_at ? `<p><strong>发送时间:</strong> ${new Date(relic.sent_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}</p>` : ''}
+                        <p><strong>创建时间:</strong> ${new Date(relic.created_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}</p>
                         <p>${relic.video_url ? `<strong>视频URL:</strong> ${relic.video_url.substring(0, 30)}...` : ''}</p>
                         <p>${relic.audio_url ? `<strong>音频URL:</strong> ${relic.audio_url.substring(0, 30)}...` : ''}</p>
                         <div class="relic-actions">
@@ -1009,6 +1002,20 @@
         function playVideo(videoUrl) {
             console.log('开始播放视频，URL:', videoUrl);
             
+            // 先显示加载中的模态框
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.style.zIndex = '1001';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px; text-align: center;">
+                    <button class="btn btn-secondary" style="position: absolute; top: 10px; right: 10px; z-index: 10;">关闭</button>
+                    <div style="padding: 50px;">
+                        <p style="color: white; font-size: 18px;">视频加载中，请稍候...</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
             // 检查视频URL是否可访问
             fetch(videoUrl, {
                 method: 'HEAD'
@@ -1019,6 +1026,7 @@
                 if (!response.ok) {
                     console.error('视频URL无法访问，状态码:', response.status);
                     alert(`视频URL无法访问，状态码: ${response.status}`);
+                    document.body.removeChild(modal);
                     return;
                 }
                 
@@ -1029,6 +1037,7 @@
                 video.autoplay = true;
                 video.style.width = '100%';
                 video.style.height = 'auto';
+                video.preload = 'metadata'; // 预加载元数据
                 
                 // 添加错误处理
                 video.addEventListener('error', (e) => {
@@ -1036,6 +1045,7 @@
                     console.error('视频错误代码:', video.error.code);
                     console.error('视频错误信息:', video.error.message);
                     alert(`视频播放失败: ${video.error.message}`);
+                    document.body.removeChild(modal);
                 });
                 
                 // 添加加载事件
@@ -1043,6 +1053,17 @@
                     console.log('视频元数据加载成功，时长:', video.duration);
                     console.log('视频宽度:', video.videoWidth);
                     console.log('视频高度:', video.videoHeight);
+                    // 元数据加载完成后，更新模态框内容
+                    modal.innerHTML = `
+                        <div class="modal-content" style="max-width: 800px;">
+                            <button class="btn btn-secondary" style="position: absolute; top: 10px; right: 10px; z-index: 10;">关闭</button>
+                            ${video.outerHTML}
+                        </div>
+                    `;
+                    // 重新绑定关闭按钮事件
+                    modal.querySelector('.btn-secondary').addEventListener('click', () => {
+                        document.body.removeChild(modal);
+                    });
                 });
                 
                 // 添加播放事件
@@ -1054,25 +1075,11 @@
                 video.addEventListener('ended', () => {
                     console.log('视频播放结束');
                 });
-                
-                const modal = document.createElement('div');
-                modal.className = 'modal active';
-                modal.style.zIndex = '1001';
-                modal.innerHTML = `
-                    <div class="modal-content" style="max-width: 800px;">
-                        <button class="btn btn-secondary" style="position: absolute; top: 10px; right: 10px; z-index: 10;">关闭</button>
-                        ${video.outerHTML}
-                    </div>
-                `;
-                document.body.appendChild(modal);
-
-                modal.querySelector('.btn-secondary').addEventListener('click', () => {
-                    document.body.removeChild(modal);
-                });
             })
             .catch(error => {
                 console.error('检查视频URL时发生错误:', error);
                 alert(`检查视频URL时发生错误: ${error.message}`);
+                document.body.removeChild(modal);
             });
         }
 
@@ -1154,18 +1161,18 @@
 
             // 监听录制结束事件
             mediaRecorder.onstop = async () => {
+                // 立即停止媒体流，确保视频真正停止录制
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                    mediaStream = null;
+                }
+
                 const blob = new Blob(recordedChunks, {
                     type: isCameraOn ? 'video/webm' : 'audio/webm'
                 });
 
                 // 上传到Supabase Storage
                 await uploadToStorage(blob);
-
-                // 上传完成后停止媒体流，确保视频真正停止录制
-                if (mediaStream) {
-                    mediaStream.getTracks().forEach(track => track.stop());
-                    mediaStream = null;
-                }
 
                 // 重置录制状态
                 recordedChunks = [];
@@ -1203,6 +1210,9 @@
 
                 console.log('上传文件路径:', fileName);
                 console.log('存储桶名称:', 'recordings');
+
+                // 显示上传中消息
+                showMessage('recording-message', 'success', '正在上传文件...');
 
                 // 直接尝试上传文件，跳过存储桶检查和创建
                 // 因为用户说已经有存储桶了，可能是权限问题导致无法列出存储桶
