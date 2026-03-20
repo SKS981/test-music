@@ -21,7 +21,7 @@
             display: flex;
             flex-direction: column;
             position: relative;
-            overflow: hidden;
+            overflow: auto;
             background-image: url('appp_p.png');
             background-size: cover;
             background-position: center;
@@ -81,7 +81,7 @@
         .main-container {
             display: flex;
             flex: 1;
-            overflow: hidden;
+            overflow: auto;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
         }
@@ -174,7 +174,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow: auto;
         }
 
         .content-header {
@@ -758,6 +758,13 @@
             const supabaseAnonKey = 'sb_publishable_6fgteWV1lGxwi4Tgx_PuLQ_w1XiEmPF';
 
             try {
+                console.log('开始初始化Supabase客户端...');
+                console.log('当前全局对象:', {
+                    createClient: typeof createClient,
+                    Supabase: typeof window.Supabase,
+                    supabase: typeof window.supabase
+                });
+                
                 // 检查是否已经存在 supabase 客户端实例
                 if (typeof window.supabase === 'object' && window.supabase.auth) {
                     console.log('Supabase客户端已经存在且包含auth属性，直接使用');
@@ -780,30 +787,37 @@
                         window.supabase = window.Supabase.createClient(supabaseUrl, supabaseAnonKey);
                         console.log('Supabase客户端初始化成功（使用 window.Supabase.createClient）');
                     }
-                    // 方法4：直接使用 CDN 脚本提供的 supabase 对象
-                    else if (typeof window.supabase === 'object') {
-                        console.log('使用现有的 supabase 对象');
-                        console.log('当前supabase对象:', window.supabase);
-                    }
+                    // 方法4：动态加载Supabase SDK
                     else {
-                        console.error('无法初始化Supabase客户端：所有尝试都失败了');
-                        console.log('当前全局对象:', {
-                            createClient: typeof createClient,
-                            Supabase: typeof window.Supabase,
-                            supabase: typeof window.supabase
-                        });
+                        console.log('尝试动态加载Supabase SDK...');
+                        const script = document.createElement('script');
+                        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+                        script.async = false; // 同步加载
+                        script.onload = function() {
+                            console.log('Supabase SDK加载成功');
+                            if (typeof createClient === 'function') {
+                                window.supabase = createClient(supabaseUrl, supabaseAnonKey);
+                                console.log('Supabase客户端初始化成功（动态加载后）');
+                                // 加载完成后检查用户登录状态
+                                checkUser();
+                            } else {
+                                console.error('Supabase SDK加载成功但createClient函数未定义');
+                            }
+                        };
+                        script.onerror = function() {
+                            console.error('Supabase SDK加载失败');
+                        };
+                        document.head.appendChild(script);
+                        return; // 等待脚本加载完成后再执行checkUser
                     }
                 }
+                
+                console.log('Supabase初始化完成，当前实例:', window.supabase);
+                // 初始化完成后检查用户登录状态
+                checkUser();
             } catch (e) {
                 console.error('Supabase初始化错误:', e);
             }
-        }
-
-        // 当页面加载完成后初始化Supabase
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeSupabase);
-        } else {
-            initializeSupabase();
         }
 
         // 全局变量
@@ -813,18 +827,31 @@
         let mediaRecorder = null;
         let recordedChunks = [];
         let isCameraOn = true;
+        let lastUploadedFileUrl = null; // 存储最近上传的文件URL
+
+        // 当页面加载完成后初始化应用
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
 
         // 检查用户登录状态
         async function checkUser() {
             console.log('开始检查用户登录状态...');
+            console.log('当前window.supabase:', window.supabase);
+            console.log('当前window.supabase.auth:', window.supabase ? window.supabase.auth : 'undefined');
+            
             try {
                 if (window.supabase && window.supabase.auth) {
+                    console.log('开始调用auth.getUser()...');
                     const { data, error } = await window.supabase.auth.getUser();
                     console.log('认证检查结果:', { data, error });
                     
                     if (error) {
                         console.error('认证检查失败:', error);
                         // 用户未登录，跳转到登录页面
+                        console.log('跳转到登录页面...');
                         window.location.href = 'index.html';
                     } else if (!data.user) {
                         console.log('用户未登录，跳转到登录页面...');
@@ -833,7 +860,9 @@
                     } else {
                         console.log('用户已登录:', data.user);
                         currentUser = data.user;
+                        console.log('设置用户邮箱...');
                         document.getElementById('user-email').textContent = data.user.email || '用户';
+                        console.log('加载联系人...');
                         loadContacts();
                     }
                 } else {
@@ -945,17 +974,22 @@
                 relics.forEach(relic => {
                     const relicItem = document.createElement('div');
                     relicItem.className = 'relic-item';
+                    // 检查 anonymous_send 字段是否存在
+                    const anonymousSend = relic.anonymous_send || false;
                     relicItem.innerHTML = `
                         <h5>${relic.title}</h5>
                         <p>${relic.content}</p>
                         <p><strong>沉默阈值:</strong> ${formatSilenceThreshold(relic.silence_threshold_days)}</p>
-                        <p><strong>匿名发送:</strong> ${relic.anonymous_send ? '是' : '否'}</p>
+                        <p><strong>匿名发送:</strong> ${anonymousSend ? '是' : '否'}</p>
                         <p><strong>发送状态:</strong> ${relic.sent ? '已发送' : '未发送'}</p>
                         ${relic.sent_at ? `<p><strong>发送时间:</strong> ${new Date(relic.sent_at).toLocaleString()}</p>` : ''}
                         <p><strong>创建时间:</strong> ${new Date(relic.created_at).toLocaleString()}</p>
+                        <p>${relic.video_url ? `<strong>视频URL:</strong> ${relic.video_url.substring(0, 30)}...` : ''}</p>
+                        <p>${relic.audio_url ? `<strong>音频URL:</strong> ${relic.audio_url.substring(0, 30)}...` : ''}</p>
                         <div class="relic-actions">
                             ${relic.audio_url ? `<button onclick="playAudio('${relic.audio_url}')">播放音频</button>` : ''}
                             ${relic.video_url ? `<button onclick="playVideo('${relic.video_url}')">播放视频</button>` : ''}
+                            <button onclick="deleteRelic('${relic.id}')" style="background: rgba(231, 76, 60, 0.8);">删除</button>
                         </div>
                     `;
                     relicsList.appendChild(relicItem);
@@ -973,27 +1007,103 @@
 
         // 播放视频
         function playVideo(videoUrl) {
-            const video = document.createElement('video');
-            video.src = videoUrl;
-            video.controls = true;
-            video.autoplay = true;
-            video.style.width = '100%';
-            video.style.height = 'auto';
+            console.log('开始播放视频，URL:', videoUrl);
             
-            const modal = document.createElement('div');
-            modal.className = 'modal active';
-            modal.style.zIndex = '1001';
-            modal.innerHTML = `
-                <div class="modal-content" style="max-width: 800px;">
-                    <button class="btn btn-secondary" style="position: absolute; top: 10px; right: 10px; z-index: 10;">关闭</button>
-                    ${video.outerHTML}
-                </div>
-            `;
-            document.body.appendChild(modal);
+            // 检查视频URL是否可访问
+            fetch(videoUrl, {
+                method: 'HEAD'
+            })
+            .then(response => {
+                console.log('视频URL响应状态:', response.status);
+                console.log('视频URL响应头:', response.headers);
+                if (!response.ok) {
+                    console.error('视频URL无法访问，状态码:', response.status);
+                    alert(`视频URL无法访问，状态码: ${response.status}`);
+                    return;
+                }
+                
+                // URL可访问，创建视频元素
+                const video = document.createElement('video');
+                video.src = videoUrl;
+                video.controls = true;
+                video.autoplay = true;
+                video.style.width = '100%';
+                video.style.height = 'auto';
+                
+                // 添加错误处理
+                video.addEventListener('error', (e) => {
+                    console.error('视频播放错误:', e);
+                    console.error('视频错误代码:', video.error.code);
+                    console.error('视频错误信息:', video.error.message);
+                    alert(`视频播放失败: ${video.error.message}`);
+                });
+                
+                // 添加加载事件
+                video.addEventListener('loadedmetadata', () => {
+                    console.log('视频元数据加载成功，时长:', video.duration);
+                    console.log('视频宽度:', video.videoWidth);
+                    console.log('视频高度:', video.videoHeight);
+                });
+                
+                // 添加播放事件
+                video.addEventListener('play', () => {
+                    console.log('视频开始播放');
+                });
+                
+                // 添加结束事件
+                video.addEventListener('ended', () => {
+                    console.log('视频播放结束');
+                });
+                
+                const modal = document.createElement('div');
+                modal.className = 'modal active';
+                modal.style.zIndex = '1001';
+                modal.innerHTML = `
+                    <div class="modal-content" style="max-width: 800px;">
+                        <button class="btn btn-secondary" style="position: absolute; top: 10px; right: 10px; z-index: 10;">关闭</button>
+                        ${video.outerHTML}
+                    </div>
+                `;
+                document.body.appendChild(modal);
 
-            modal.querySelector('.btn-secondary').addEventListener('click', () => {
-                document.body.removeChild(modal);
+                modal.querySelector('.btn-secondary').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                });
+            })
+            .catch(error => {
+                console.error('检查视频URL时发生错误:', error);
+                alert(`检查视频URL时发生错误: ${error.message}`);
             });
+        }
+
+        // 删除遗物
+        async function deleteRelic(relicId) {
+            if (!currentUser || !window.supabase) return;
+            
+            if (confirm('确定要删除这个遗物吗？此操作无法撤销。')) {
+                try {
+                    const { error } = await window.supabase
+                        .from('relics')
+                        .delete()
+                        .eq('id', relicId)
+                        .eq('user_id', currentUser.id);
+                    
+                    if (error) {
+                        console.error('删除遗物失败:', error);
+                        showMessage('recording-message', 'error', '删除遗物失败，请重试');
+                        return;
+                    }
+                    
+                    showMessage('recording-message', 'success', '遗物删除成功');
+                    // 重新加载遗物列表
+                    if (currentContact) {
+                        loadRelics(currentContact.id);
+                    }
+                } catch (e) {
+                    console.error('删除遗物过程中发生错误:', e);
+                    showMessage('recording-message', 'error', '删除遗物过程中发生错误，请重试');
+                }
+            }
         }
 
         // 初始化音视频录制
@@ -1051,8 +1161,18 @@
                 // 上传到Supabase Storage
                 await uploadToStorage(blob);
 
+                // 上传完成后停止媒体流，确保视频真正停止录制
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                    mediaStream = null;
+                }
+
                 // 重置录制状态
                 recordedChunks = [];
+                
+                // 重置预览区域
+                const preview = document.getElementById('preview');
+                preview.innerHTML = '<p>点击开始录制按钮调用摄像头/麦克风</p>';
             };
 
             // 开始录制
@@ -1077,33 +1197,49 @@
             if (!currentUser || !window.supabase) return;
 
             try {
-                const fileName = `${currentUser.id}/${Date.now()}.${isCameraOn ? 'webm' : 'webm'}`;
+                // 使用简单的文件名，不使用复杂的目录结构
+                const fileName = `${Date.now()}.webm`;
                 const fileType = isCameraOn ? 'video' : 'audio';
+
+                console.log('上传文件路径:', fileName);
+                console.log('存储桶名称:', 'recordings');
+
+                // 直接尝试上传文件，跳过存储桶检查和创建
+                // 因为用户说已经有存储桶了，可能是权限问题导致无法列出存储桶
+                console.log('直接尝试上传文件...');
 
                 // 上传文件
                 const { data, error } = await window.supabase
                     .storage
                     .from('recordings')
-                    .upload(fileName, blob);
+                    .upload(fileName, blob, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
 
                 if (error) {
                     console.error('上传失败:', error);
-                    showMessage('recording-message', 'error', '上传失败，请重试');
+                    showMessage('recording-message', 'error', `上传失败: ${error.message}`);
                     return;
                 }
 
-                // 获取公网URL
-                const { data: { publicUrl } } = window.supabase
+                console.log('上传成功:', data);
+
+                // 获取签名URL，有效期为7天
+                const { data: signedUrlData } = await window.supabase
                     .storage
                     .from('recordings')
-                    .getPublicUrl(fileName);
+                    .createSignedUrl(fileName, 60 * 60 * 24 * 7); // 7天有效期
+                
+                const signedUrl = signedUrlData.signedUrl;
+                console.log('获取到的签名视频URL:', signedUrl);
 
                 // 保存文件元数据到数据库
                 const { error: dbError } = await window.supabase
                     .from('recording_files')
                     .insert({
                         user_id: currentUser.id,
-                        file_url: publicUrl,
+                        file_url: signedUrl,
                         file_type: fileType,
                         duration: 0 // 暂时设置为0，实际应用中可以计算
                     });
@@ -1114,10 +1250,15 @@
                     return;
                 }
 
-                showMessage('recording-message', 'success', '上传成功！文件已保存');
+                // 更新最近上传的文件URL
+                lastUploadedFileUrl = signedUrl;
+                showMessage('recording-message', 'success', '上传成功！文件已保存，可用于创建遗物');
+                
+                // 显示最近上传的文件预览
+                updateRecentFilesPreview();
             } catch (error) {
                 console.error('上传过程中发生错误:', error);
-                showMessage('recording-message', 'error', '上传过程中发生错误');
+                showMessage('recording-message', 'error', `上传过程中发生错误: ${error.message}`);
             }
         }
 
@@ -1129,6 +1270,66 @@
                 mediaStream = null;
             }
             initRecording();
+        }
+
+        // 更新最近上传的文件预览
+        function updateRecentFilesPreview() {
+            const recordingSection = document.querySelector('.recording-section');
+            let previewContainer = document.getElementById('recent-files-preview');
+            
+            // 如果预览容器不存在，创建它
+            if (!previewContainer) {
+                previewContainer = document.createElement('div');
+                previewContainer.id = 'recent-files-preview';
+                previewContainer.style.marginTop = '20px';
+                previewContainer.style.padding = '15px';
+                previewContainer.style.background = 'rgba(255, 255, 255, 0.1)';
+                previewContainer.style.borderRadius = '10px';
+                previewContainer.style.backdropFilter = 'blur(5px)';
+                previewContainer.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+                
+                const header = document.createElement('h4');
+                header.textContent = '最近上传的文件';
+                header.style.color = 'white';
+                header.style.marginBottom = '10px';
+                header.style.textShadow = '0 0 5px rgba(255, 255, 255, 0.5)';
+                previewContainer.appendChild(header);
+                
+                recordingSection.appendChild(previewContainer);
+            }
+            
+            // 清空容器
+            previewContainer.innerHTML = '<h4 style="color: white; margin-bottom: 10px; text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);">最近上传的文件</h4>';
+            
+            if (lastUploadedFileUrl) {
+                const filePreview = document.createElement('div');
+                filePreview.style.marginBottom = '10px';
+                
+                if (lastUploadedFileUrl.includes('.webm')) {
+                    // 视频预览
+                    const video = document.createElement('video');
+                    video.src = lastUploadedFileUrl;
+                    video.controls = true;
+                    video.style.width = '100%';
+                    video.style.maxHeight = '200px';
+                    video.style.borderRadius = '5px';
+                    filePreview.appendChild(video);
+                } else {
+                    // 音频预览
+                    const audio = document.createElement('audio');
+                    audio.src = lastUploadedFileUrl;
+                    audio.controls = true;
+                    audio.style.width = '100%';
+                    filePreview.appendChild(audio);
+                }
+                
+                previewContainer.appendChild(filePreview);
+            } else {
+                const noFileMessage = document.createElement('p');
+                noFileMessage.textContent = '暂无最近上传的文件';
+                noFileMessage.style.color = 'rgba(255, 255, 255, 0.7)';
+                previewContainer.appendChild(noFileMessage);
+            }
         }
 
         // 显示消息
@@ -1227,7 +1428,8 @@
                 const silenceMonths = parseInt(document.getElementById('silence-months').value) || 0;
                 const silenceDays = parseInt(document.getElementById('silence-days').value) || 0;
                 const silenceThreshold = silenceYears * 365 + silenceMonths * 30 + silenceDays;
-                const anonymousSend = document.getElementById('anonymous-send').checked;
+                // 暂时注释掉匿名发送功能，因为数据库表中缺少该字段
+                // const anonymousSend = document.getElementById('anonymous-send').checked;
 
                 if (!contactId) {
                     showMessage('recording-message', 'error', '请选择联系人');
@@ -1235,33 +1437,66 @@
                 }
 
                 try {
-                    if (window.supabase) {
-                        const { data, error } = await window.supabase
-                            .from('relics')
-                            .insert({
-                                user_id: currentUser.id,
-                                contact_id: contactId,
-                                title,
-                                content,
-                                anonymous_send: anonymousSend,
-                                silence_threshold_days: silenceThreshold
-                            });
-
-                        if (error) {
-                            console.error('创建遗物失败:', error);
-                            showMessage('recording-message', 'error', '创建遗物失败，请重试');
-                            return;
-                        }
-
-                        showMessage('recording-message', 'success', '遗物创建成功');
-                        relicForm.reset();
-                        loadRelics(contactId);
-                    } else {
+                    console.log('开始创建遗物...');
+                    console.log('当前用户:', currentUser);
+                    console.log('联系人ID:', contactId);
+                    console.log('标题:', title);
+                    console.log('内容:', content);
+                    console.log('沉默阈值:', silenceThreshold);
+                    // console.log('匿名发送:', anonymousSend);
+                    console.log('Supabase实例:', window.supabase);
+                    
+                    if (!window.supabase) {
+                        console.error('Supabase未初始化');
                         showMessage('recording-message', 'error', 'Supabase未初始化，请刷新页面重试');
+                        return;
                     }
+                    
+                    if (!currentUser) {
+                        console.error('当前用户未登录');
+                        showMessage('recording-message', 'error', '用户未登录，请重新登录');
+                        return;
+                    }
+                    
+                    // 准备要插入的数据
+                    const relicData = {
+                        user_id: currentUser.id,
+                        contact_id: contactId,
+                        title,
+                        content,
+                        // 暂时注释掉匿名发送字段，因为数据库表中缺少该字段
+                        // anonymous_send: anonymousSend,
+                        silence_threshold_days: silenceThreshold
+                    };
+                    
+                    // 如果有最近上传的文件，添加到遗物数据中
+                    if (lastUploadedFileUrl) {
+                        if (lastUploadedFileUrl.includes('.webm')) {
+                            // 假设是视频文件
+                            relicData.video_url = lastUploadedFileUrl;
+                        } else {
+                            // 假设是音频文件
+                            relicData.audio_url = lastUploadedFileUrl;
+                        }
+                    }
+                    
+                    const { data, error } = await window.supabase
+                        .from('relics')
+                        .insert(relicData);
+
+                    if (error) {
+                        console.error('创建遗物失败:', error);
+                        showMessage('recording-message', 'error', `创建遗物失败: ${error.message}`);
+                        return;
+                    }
+
+                    console.log('遗物创建成功:', data);
+                    showMessage('recording-message', 'success', '遗物创建成功');
+                    relicForm.reset();
+                    loadRelics(contactId);
                 } catch (e) {
                     console.error('创建遗物过程中发生错误:', e);
-                    showMessage('recording-message', 'error', '创建遗物过程中发生错误，请重试');
+                    showMessage('recording-message', 'error', `创建遗物过程中发生错误: ${e.message}`);
                 }
             });
         }
@@ -1346,7 +1581,11 @@
 
         // 初始化应用
         function initApp() {
-            checkUser();
+            console.log('开始初始化应用...');
+            // 首先初始化Supabase
+            initializeSupabase();
+            
+            // 初始化其他功能
             initAddContactModal();
             initRelicForm();
             initLogout();
@@ -1357,7 +1596,7 @@
             document.getElementById('toggle-camera').addEventListener('click', toggleCamera);
 
             // 检查沉默阈值
-            setTimeout(checkSilenceThresholds, 5000); // 延迟5秒执行，确保用户已登录
+            setTimeout(checkSilenceThresholds, 6000); // 延迟6秒执行，确保用户已登录
         }
 
         // 页面加载完成后初始化
