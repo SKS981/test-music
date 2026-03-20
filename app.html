@@ -328,7 +328,7 @@
             color: rgba(255, 255, 255, 0.9);
         }
 
-        input, textarea, select {
+        input[type="text"], input[type="number"], input[type="email"], input[type="tel"], textarea {
             padding: 12px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 10px;
@@ -337,10 +337,29 @@
             color: white;
             backdrop-filter: blur(5px);
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: rgba(102, 126, 234, 0.8);
+            cursor: pointer;
+            transform: scale(1.2);
+        }
+
+        select {
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            font-size: 1em;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            backdrop-filter: blur(5px);
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 12px center;
-            background-size: 16px;
+            background-size: 12px;
         }
 
         input:focus, textarea:focus, select:focus {
@@ -672,8 +691,21 @@
                             <textarea id="relic-content" required></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="silence-threshold">沉默阈值（天）</label>
-                            <input type="number" id="silence-threshold" min="1" max="365" value="7" required>
+                            <label>沉默阈值</label>
+                            <div style="display: flex; gap: 10px;">
+                                <div style="flex: 1; position: relative;">
+                                    <input type="number" id="silence-years" min="0" max="100" value="0" placeholder="0" style="padding-right: 25px;">
+                                    <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: rgba(255, 255, 255, 0.7);">年</span>
+                                </div>
+                                <div style="flex: 1; position: relative;">
+                                    <input type="number" id="silence-months" min="0" max="11" value="0" placeholder="0" style="padding-right: 25px;">
+                                    <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: rgba(255, 255, 255, 0.7);">月</span>
+                                </div>
+                                <div style="flex: 1; position: relative;">
+                                    <input type="number" id="silence-days" min="1" max="31" value="7" placeholder="7" style="padding-right: 25px;" required>
+                                    <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: rgba(255, 255, 255, 0.7);">天</span>
+                                </div>
+                            </div>
                         </div>
                         <div class="form-actions">
                             <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px; margin-right: 20px;">
@@ -916,7 +948,7 @@
                     relicItem.innerHTML = `
                         <h5>${relic.title}</h5>
                         <p>${relic.content}</p>
-                        <p><strong>沉默阈值:</strong> ${relic.silence_threshold_days}天</p>
+                        <p><strong>沉默阈值:</strong> ${formatSilenceThreshold(relic.silence_threshold_days)}</p>
                         <p><strong>匿名发送:</strong> ${relic.anonymous_send ? '是' : '否'}</p>
                         <p><strong>发送状态:</strong> ${relic.sent ? '已发送' : '未发送'}</p>
                         ${relic.sent_at ? `<p><strong>发送时间:</strong> ${new Date(relic.sent_at).toLocaleString()}</p>` : ''}
@@ -1106,6 +1138,23 @@
             element.textContent = message;
         }
 
+        // 格式化沉默阈值为年、月、天
+        function formatSilenceThreshold(days) {
+            if (!days || days <= 0) return '0天';
+            
+            const years = Math.floor(days / 365);
+            const remainingDays = days % 365;
+            const months = Math.floor(remainingDays / 30);
+            const finalDays = remainingDays % 30;
+            
+            let result = '';
+            if (years > 0) result += `${years}年`;
+            if (months > 0) result += `${months}月`;
+            if (finalDays > 0) result += `${finalDays}天`;
+            
+            return result;
+        }
+
         // 初始化添加联系人模态框
         function initAddContactModal() {
             const modal = document.getElementById('add-contact-modal');
@@ -1174,7 +1223,10 @@
                 const contactId = document.getElementById('relic-contact').value;
                 const title = document.getElementById('relic-title').value;
                 const content = document.getElementById('relic-content').value;
-                const silenceThreshold = parseInt(document.getElementById('silence-threshold').value);
+                const silenceYears = parseInt(document.getElementById('silence-years').value) || 0;
+                const silenceMonths = parseInt(document.getElementById('silence-months').value) || 0;
+                const silenceDays = parseInt(document.getElementById('silence-days').value) || 0;
+                const silenceThreshold = silenceYears * 365 + silenceMonths * 30 + silenceDays;
                 const anonymousSend = document.getElementById('anonymous-send').checked;
 
                 if (!contactId) {
@@ -1269,11 +1321,11 @@
                         if (contact.email) {
                             sendMethod = 'email';
                             // 这里应该调用发送邮件的API
-                            console.log(`发送邮件到: ${contact.email}，内容: ${relic.title}`);
+                            console.log(`${relic.anonymous_send ? '匿名' : ''}发送邮件到: ${contact.email}，内容: ${relic.title}`);
                         } else if (contact.phone) {
                             sendMethod = 'sms';
                             // 这里应该调用发送短信的API
-                            console.log(`发送短信到: ${contact.phone}，内容: ${relic.title}`);
+                            console.log(`${relic.anonymous_send ? '匿名' : ''}发送短信到: ${contact.phone}，内容: ${relic.title}`);
                         }
 
                         if (sendMethod) {
