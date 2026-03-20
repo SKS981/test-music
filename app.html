@@ -676,7 +676,10 @@
                             <input type="number" id="silence-threshold" min="1" max="365" value="7" required>
                         </div>
                         <div class="form-actions">
-                            <button type="button" id="ai-polish">AI润色</button>
+                            <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px; margin-right: 20px;">
+                                <input type="checkbox" id="anonymous-send" style="width: auto; margin: 0;">
+                                <label for="anonymous-send" style="margin: 0;">匿名发送</label>
+                            </div>
                             <button type="submit" id="save-relic">保存遗物</button>
                         </div>
                     </form>
@@ -913,8 +916,10 @@
                     relicItem.innerHTML = `
                         <h5>${relic.title}</h5>
                         <p>${relic.content}</p>
-                        ${relic.ai_enhanced_content ? `<p><strong>AI润色:</strong> ${relic.ai_enhanced_content}</p>` : ''}
                         <p><strong>沉默阈值:</strong> ${relic.silence_threshold_days}天</p>
+                        <p><strong>匿名发送:</strong> ${relic.anonymous_send ? '是' : '否'}</p>
+                        <p><strong>发送状态:</strong> ${relic.sent ? '已发送' : '未发送'}</p>
+                        ${relic.sent_at ? `<p><strong>发送时间:</strong> ${new Date(relic.sent_at).toLocaleString()}</p>` : ''}
                         <p><strong>创建时间:</strong> ${new Date(relic.created_at).toLocaleString()}</p>
                         <div class="relic-actions">
                             ${relic.audio_url ? `<button onclick="playAudio('${relic.audio_url}')">播放音频</button>` : ''}
@@ -1160,23 +1165,6 @@
         // 初始化遗物表单
         function initRelicForm() {
             const relicForm = document.getElementById('relic-form');
-            const aiPolishBtn = document.getElementById('ai-polish');
-
-            // AI润色功能
-            aiPolishBtn.addEventListener('click', () => {
-                const content = document.getElementById('relic-content').value;
-                if (!content) {
-                    showMessage('recording-message', 'error', '请先输入内容');
-                    return;
-                }
-
-                // 模拟AI润色
-                setTimeout(() => {
-                    const polishedContent = content + '\n\n—— 时光留声 AI 润色';
-                    document.getElementById('relic-content').value = polishedContent;
-                    showMessage('recording-message', 'success', 'AI润色完成');
-                }, 1000);
-            });
 
             // 提交表单
             relicForm.addEventListener('submit', async (e) => {
@@ -1187,6 +1175,7 @@
                 const title = document.getElementById('relic-title').value;
                 const content = document.getElementById('relic-content').value;
                 const silenceThreshold = parseInt(document.getElementById('silence-threshold').value);
+                const anonymousSend = document.getElementById('anonymous-send').checked;
 
                 if (!contactId) {
                     showMessage('recording-message', 'error', '请选择联系人');
@@ -1202,7 +1191,7 @@
                                 contact_id: contactId,
                                 title,
                                 content,
-                                ai_enhanced_content: content, // 暂时使用原始内容，实际应用中可以使用AI润色结果
+                                anonymous_send: anonymousSend,
                                 silence_threshold_days: silenceThreshold
                             });
 
@@ -1248,6 +1237,61 @@
             });
         }
 
+        // 检查沉默阈值并发送遗物
+        async function checkSilenceThresholds() {
+            if (!currentUser || !window.supabase) return;
+
+            try {
+                // 获取所有遗物
+                const { data: relics, error } = await window.supabase
+                    .from('relics')
+                    .select('*, contacts(email, phone)')
+                    .eq('user_id', currentUser.id);
+
+                if (error) {
+                    console.error('获取遗物失败:', error);
+                    return;
+                }
+
+                const now = new Date();
+
+                relics.forEach(async (relic) => {
+                    // 计算创建时间到现在的天数
+                    const createdAt = new Date(relic.created_at);
+                    const daysSinceCreation = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+
+                    // 检查是否达到沉默阈值
+                    if (daysSinceCreation >= relic.silence_threshold_days && !relic.sent) {
+                        // 根据联系人信息决定发送方式
+                        const contact = relic.contacts;
+                        let sendMethod = null;
+
+                        if (contact.email) {
+                            sendMethod = 'email';
+                            // 这里应该调用发送邮件的API
+                            console.log(`发送邮件到: ${contact.email}，内容: ${relic.title}`);
+                        } else if (contact.phone) {
+                            sendMethod = 'sms';
+                            // 这里应该调用发送短信的API
+                            console.log(`发送短信到: ${contact.phone}，内容: ${relic.title}`);
+                        }
+
+                        if (sendMethod) {
+                            // 更新遗物状态为已发送
+                            await window.supabase
+                                .from('relics')
+                                .update({ sent: true, sent_at: new Date().toISOString() })
+                                .eq('id', relic.id);
+
+                            console.log(`遗物已发送: ${relic.title}，发送方式: ${sendMethod}`);
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error('检查沉默阈值过程中发生错误:', e);
+            }
+        }
+
         // 初始化应用
         function initApp() {
             checkUser();
@@ -1259,6 +1303,9 @@
             document.getElementById('start-record').addEventListener('click', startRecording);
             document.getElementById('stop-record').addEventListener('click', stopRecording);
             document.getElementById('toggle-camera').addEventListener('click', toggleCamera);
+
+            // 检查沉默阈值
+            setTimeout(checkSilenceThresholds, 5000); // 延迟5秒执行，确保用户已登录
         }
 
         // 页面加载完成后初始化
