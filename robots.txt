@@ -1,0 +1,6 @@
+User-agent: *
+Allow:/
+Disallow: /admin/
+Disallow: /tmp/
+Disallow: /search/
+Sitemap: https://zqdssg.xyz/sitemap.xml
