@@ -42,6 +42,17 @@
             min-height: 100%;
         }
         
+        /* 确保容器在所有浏览器中都显示在视频之上 */
+        .container {
+            position: relative;
+            z-index: 10;
+        }
+        
+        .auth-card {
+            position: relative;
+            z-index: 11;
+        }
+        
         #background-canvas {
             position: absolute;
             top: 0;
@@ -366,6 +377,11 @@
             // 检测是否为移动设备
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             
+            // 检测是否为百度浏览器
+            const isBaiduBrowser = /baidubrowser/i.test(navigator.userAgent);
+            
+            console.log('设备检测结果:', { isMobile, isBaiduBrowser, userAgent: navigator.userAgent });
+            
             // 尝试播放视频
             function playVideo() {
                 console.log('尝试播放视频...');
@@ -380,6 +396,15 @@
                     document.body.style.background = 'url(rad.png) no-repeat center center fixed';
                     document.body.style.backgroundSize = 'cover';
                 });
+            }
+            
+            // 对于百度浏览器，直接使用备用背景
+            if (isBaiduBrowser) {
+                console.log('检测到百度浏览器，使用备用背景');
+                video.style.display = 'none';
+                document.body.style.background = 'url(rad.png) no-repeat center center fixed';
+                document.body.style.backgroundSize = 'cover';
+                return;
             }
             
             // 对于移动设备，添加用户交互后再尝试播放
