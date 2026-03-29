@@ -250,7 +250,7 @@
         @media (max-width: 480px) {
             .container {
                 padding: 10px;
-                z-index: 1;
+                z-index: 10;
                 position: relative;
             }
 
@@ -378,9 +378,12 @@
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             
             // 检测是否为百度浏览器
-            const isBaiduBrowser = /baidubrowser/i.test(navigator.userAgent);
+            const isBaiduBrowser = /baidubrowser|baidu|bidu/i.test(navigator.userAgent);
             
-            console.log('设备检测结果:', { isMobile, isBaiduBrowser, userAgent: navigator.userAgent });
+            // 检测是否为百度App
+            const isBaiduApp = /baiduboxapp/i.test(navigator.userAgent);
+            
+            console.log('设备检测结果:', { isMobile, isBaiduBrowser, isBaiduApp, userAgent: navigator.userAgent });
             
             // 尝试播放视频
             function playVideo() {
@@ -398,9 +401,9 @@
                 });
             }
             
-            // 对于百度浏览器，直接使用备用背景
-            if (isBaiduBrowser) {
-                console.log('检测到百度浏览器，使用备用背景');
+            // 对于百度浏览器或百度App，直接使用备用背景
+            if (isBaiduBrowser || isBaiduApp) {
+                console.log('检测到百度浏览器或百度App，使用备用背景');
                 video.style.display = 'none';
                 document.body.style.background = 'url(rad.png) no-repeat center center fixed';
                 document.body.style.backgroundSize = 'cover';
