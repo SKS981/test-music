@@ -640,6 +640,34 @@
             }
         }
 
+        // 友链检测功能
+        function checkFriendLink() {
+            console.log('开始检测友链...');
+            
+            // 检测关键词【好运网】
+            const pageContent = document.body.innerHTML;
+            const hasKeyword = pageContent.includes('好运网');
+            
+            // 检测链接【https://www.haoyun.info】
+            const links = document.querySelectorAll('a');
+            let hasLink = false;
+            links.forEach(link => {
+                if (link.href === 'https://www.haoyun.info' || link.textContent.includes('好运网')) {
+                    hasLink = true;
+                }
+            });
+            
+            console.log('友链检测结果:', { hasKeyword, hasLink });
+            
+            // 如果检测到友链，可以在这里执行相应的操作
+            if (hasKeyword || hasLink) {
+                console.log('检测到友链: 好运网');
+                // 可以在这里添加其他逻辑，比如显示提示或执行其他操作
+            } else {
+                console.log('未检测到友链: 好运网');
+            }
+        }
+
         // 初始化应用
         function initializeApp() {
             // 处理视频背景
@@ -667,6 +695,9 @@
                     document.getElementById(`${formId}-form`).classList.add('active');
                 });
             });
+            
+            // 检查友链
+            checkFriendLink();
 
             // 登录表单提交
             document.getElementById('login-form').addEventListener('submit', async (e) => {

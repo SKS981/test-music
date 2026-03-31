@@ -1589,6 +1589,34 @@
             }
         }
 
+        // 友链检测功能
+        function checkFriendLink() {
+            console.log('开始检测友链...');
+            
+            // 检测关键词【好运网】
+            const pageContent = document.body.innerHTML;
+            const hasKeyword = pageContent.includes('好运网');
+            
+            // 检测链接【https://www.haoyun.info】
+            const links = document.querySelectorAll('a');
+            let hasLink = false;
+            links.forEach(link => {
+                if (link.href === 'https://www.haoyun.info' || link.textContent.includes('好运网')) {
+                    hasLink = true;
+                }
+            });
+            
+            console.log('友链检测结果:', { hasKeyword, hasLink });
+            
+            // 如果检测到友链，可以在这里执行相应的操作
+            if (hasKeyword || hasLink) {
+                console.log('检测到友链: 好运网');
+                // 可以在这里添加其他逻辑，比如显示提示或执行其他操作
+            } else {
+                console.log('未检测到友链: 好运网');
+            }
+        }
+
         // 初始化应用
         function initApp() {
             console.log('开始初始化应用...');
@@ -1604,6 +1632,9 @@
             document.getElementById('start-record').addEventListener('click', startRecording);
             document.getElementById('stop-record').addEventListener('click', stopRecording);
             document.getElementById('toggle-camera').addEventListener('click', toggleCamera);
+
+            // 检查友链
+            checkFriendLink();
 
             // 检查沉默阈值
             setTimeout(checkSilenceThresholds, 6000); // 延迟6秒执行，确保用户已登录
