@@ -714,12 +714,12 @@
 
                         if (error) {
                             showMessage('error', error.message);
-                            // 登录失败时切换到 hhzz.png 背景
+                            // 登录失败时切换到 rad.png 背景
                             const video = document.getElementById('background-video');
                             const canvas = document.getElementById('background-canvas');
                             video.style.display = 'none';
                             canvas.style.display = 'none';
-                            document.body.style.backgroundImage = 'url(hhzz.png)';
+                            document.body.style.backgroundImage = 'url(rad.png)';
                             document.body.style.backgroundSize = 'cover';
                             document.body.style.backgroundPosition = 'center';
                         } else {
@@ -729,24 +729,24 @@
                         }
                     } else {
                         showMessage('error', 'Supabase初始化失败，请刷新页面重试');
-                        // 初始化失败时也切换到 hhzz.png 背景
+                        // 初始化失败时也切换到 rad.png 背景
                         const video = document.getElementById('background-video');
                         const canvas = document.getElementById('background-canvas');
                         video.style.display = 'none';
                         canvas.style.display = 'none';
-                        document.body.style.backgroundImage = 'url(hhzz.png)';
+                        document.body.style.backgroundImage = 'url(rad.png)';
                         document.body.style.backgroundSize = 'cover';
                         document.body.style.backgroundPosition = 'center';
                     }
                 } catch (e) {
                     console.error('登录过程中发生错误:', e);
                     showMessage('error', '登录过程中发生错误，请重试');
-                    // 发生错误时切换到 hhzz.png 背景
+                    // 发生错误时切换到 rad.png 背景
                     const video = document.getElementById('background-video');
                     const canvas = document.getElementById('background-canvas');
                     video.style.display = 'none';
                     canvas.style.display = 'none';
-                    document.body.style.backgroundImage = 'url(hhzz.png)';
+                    document.body.style.backgroundImage = 'url(rad.png)';
                     document.body.style.backgroundSize = 'cover';
                     document.body.style.backgroundPosition = 'center';
                 }
