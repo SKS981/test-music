@@ -1,31 +1,17 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "*.mp4",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "*.png",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "*.xml",
-      "use": "@vercel/static"
+  "functions": {
+    "api/*.py": {
+      "runtime": "@vercel/python@3.10"
     }
-  ],
+  },
   "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
+    { "src": "/api/(.*)", "dest": "/api/$1" }
   ],
-  "env": {
-    "SUPABASE_URL": "https://gdvdbzxxgwbjeaynjimp.supabase.co",
-    "SUPABASE_ANON_KEY": "sb_publishable_6fgteWV1lGxwi4Tgx_PuLQ_w1XiEmPF"
-  }
+  "builds": [
+    { "src": "*.html", "use": "@vercel/static" },
+    { "src": "*.xml", "use": "@vercel/static" },
+    { "src": "*.txt", "use": "@vercel/static" },
+    { "src": "*.png", "use": "@vercel/static" },
+    { "src": "*.mp4", "use": "@vercel/static" }
+  ]
 }
