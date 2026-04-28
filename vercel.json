@@ -1,11 +1,6 @@
 {
-  "functions": {
-    "api/*.py": {
-      "runtime": "@vercel/python@1.2.0"
-    }
-  },
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/api/send_email", "dest": "/api/send_email.py" },
     { "src": "/(.*)", "dest": "/$1" }
   ]
 }
