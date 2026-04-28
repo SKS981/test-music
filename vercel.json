@@ -5,13 +5,7 @@
     }
   },
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" }
-  ],
-  "builds": [
-    { "src": "*.html", "use": "@vercel/static" },
-    { "src": "*.xml", "use": "@vercel/static" },
-    { "src": "*.txt", "use": "@vercel/static" },
-    { "src": "*.png", "use": "@vercel/static" },
-    { "src": "*.mp4", "use": "@vercel/static" }
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/(.*)", "dest": "/$1" }
   ]
 }
