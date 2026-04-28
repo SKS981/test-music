@@ -388,6 +388,23 @@
             min-height: 100px;
         }
 
+        .char-counter {
+            font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: right;
+            margin-top: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .char-counter.warning {
+            color: rgba(241, 196, 15, 0.9);
+        }
+
+        .char-counter.error {
+            color: rgba(231, 76, 60, 0.9);
+            font-weight: bold;
+        }
+
         .form-actions {
             display: flex;
             gap: 10px;
@@ -685,10 +702,12 @@
                         <div class="form-group">
                             <label for="relic-title">标题</label>
                             <input type="text" id="relic-title" required>
+                            <div class="char-counter" id="title-counter">0 / 100 字符</div>
                         </div>
                         <div class="form-group">
                             <label for="relic-content">内容</label>
                             <textarea id="relic-content" required></textarea>
+                            <div class="char-counter" id="content-counter">0 / 500 字符</div>
                         </div>
                         <div class="form-group">
                             <label>沉默阈值</label>
@@ -1425,6 +1444,52 @@
         // 初始化遗物表单
         function initRelicForm() {
             const relicForm = document.getElementById('relic-form');
+            const titleInput = document.getElementById('relic-title');
+            const contentInput = document.getElementById('relic-content');
+            const titleCounter = document.getElementById('title-counter');
+            const contentCounter = document.getElementById('content-counter');
+
+            const TITLE_MAX = 100;
+            const CONTENT_MAX = 500;
+
+            // 更新字符计数器
+            function updateCharCounter(input, counter, max) {
+                const current = input.value.length;
+                counter.textContent = `${current} / ${max} 字符`;
+                
+                // 移除之前的类
+                counter.classList.remove('warning', 'error');
+                
+                // 添加适当的类
+                if (current >= max * 0.9) {
+                    counter.classList.add('warning');
+                }
+                if (current >= max) {
+                    counter.classList.add('error');
+                }
+            }
+
+            // 标题输入监听
+            titleInput.addEventListener('input', () => {
+                updateCharCounter(titleInput, titleCounter, TITLE_MAX);
+                // 限制最大字符数
+                if (titleInput.value.length > TITLE_MAX) {
+                    titleInput.value = titleInput.value.substring(0, TITLE_MAX);
+                }
+            });
+
+            // 内容输入监听
+            contentInput.addEventListener('input', () => {
+                updateCharCounter(contentInput, contentCounter, CONTENT_MAX);
+                // 限制最大字符数
+                if (contentInput.value.length > CONTENT_MAX) {
+                    contentInput.value = contentInput.value.substring(0, CONTENT_MAX);
+                }
+            });
+
+            // 初始化计数器
+            updateCharCounter(titleInput, titleCounter, TITLE_MAX);
+            updateCharCounter(contentInput, contentCounter, CONTENT_MAX);
 
             // 提交表单
             relicForm.addEventListener('submit', async (e) => {
