@@ -8,8 +8,8 @@ def handler(event, context):
         import json
         data = json.loads(event['body']) if isinstance(event.get('body'), str) else event.get('body', {})
         
-        sender_email = os.environ.get('SENDER_EMAIL')
-        sender_password = os.environ.get('SENDER_PASSWORD')
+        sender_email = os.environ.get('zqdsks981@gmail.com')
+        sender_password = os.environ.get('ZQD!666zqd')
         smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
         smtp_port = int(os.environ.get('SMTP_PORT', 587))
         
@@ -45,4 +45,4 @@ def handler(event, context):
         return {
             'statusCode': 500,
             'body': json.dumps({'success': False, 'message': str(e)})
-        }
+        }   
