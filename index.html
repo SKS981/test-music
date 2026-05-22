@@ -644,15 +644,15 @@
         function checkFriendLink() {
             console.log('开始检测友链...');
             
-            // 检测关键词【好运网】
+            // 检测关键词【农贸市场设计】
             const pageContent = document.body.innerHTML;
-            const hasKeyword = pageContent.includes('好运网');
+            const hasKeyword = pageContent.includes('农贸市场设计');
             
-            // 检测链接【https://www.haoyun.info】
+            // 检测链接【http://www.baiying800.cn】
             const links = document.querySelectorAll('a');
             let hasLink = false;
             links.forEach(link => {
-                if (link.href === 'https://www.haoyun.info' || link.textContent.includes('好运网')) {
+                if (link.href === 'http://www.baiying800.cn' || link.href === 'https://www.baiying800.cn' || link.textContent.includes('农贸市场设计')) {
                     hasLink = true;
                 }
             });
@@ -661,10 +661,10 @@
             
             // 如果检测到友链，可以在这里执行相应的操作
             if (hasKeyword || hasLink) {
-                console.log('检测到友链: 好运网');
+                console.log('检测到友链: 农贸市场设计');
                 // 可以在这里添加其他逻辑，比如显示提示或执行其他操作
             } else {
-                console.log('未检测到友链: 好运网');
+                console.log('未检测到友链: 农贸市场设计');
             }
         }
 
